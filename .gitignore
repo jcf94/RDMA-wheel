@@ -1,0 +1,4 @@
+all
+rdmalib.a
+src/*.o
+.vscode/*
