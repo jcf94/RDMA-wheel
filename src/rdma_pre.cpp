@@ -34,8 +34,6 @@ void RDMA_Pre::print_config()
 {
     log_func();
     fprintf(stdout, " ------------------------------------------------\n");
-    if (config.dev_name) fprintf(stdout, " Device name                  : \"%s\"\n", config.dev_name);
-    else fprintf(stdout, " Device name                  : No Default Device\n");
     fprintf(stdout, " IB port                      : %u\n", config.ib_port);
     if (config.server_name)
         fprintf(stdout, " IP                           : %s\n", config.server_name);

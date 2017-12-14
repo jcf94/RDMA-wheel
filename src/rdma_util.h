@@ -123,7 +123,6 @@ struct Remote_MR
 /* structure of test parameters */
 struct config_t
 {
-    char *dev_name;     /* IB device name */
     char *server_name;  /* daemon host name */
     uint32_t tcp_port;  /* daemon TCP port */
     int ib_port;        /* local IB port to work with */

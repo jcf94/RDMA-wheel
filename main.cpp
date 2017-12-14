@@ -32,14 +32,18 @@ int main(int argc, char* argv[])
         pre_tcp.print_config();
         pre_tcp.tcp_sock_connect();
 
-        RDMA_Session session(&pre_tcp);
+        RDMA_Session session;
+        RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);
 
         if (strcmp(argv[1], "s") == 0)
         {
             
         } else if (strcmp(argv[1], "c") == 0)
         {
-            session.endpoint_->send_message(RDMA_MESSAGE_READ_REQUEST);
+
+            endpoint->send_message(RDMA_MESSAGE_READ_REQUEST);
+            endpoint->send_message(RDMA_MESSAGE_CLOSE);
+            endpoint->send_message(RDMA_MESSAGE_TERMINATE);
         }
 
         //session.endpoint_->send_message(RDMA_MESSAGE_ACK);

@@ -20,19 +20,20 @@ public:
 
     friend class RDMA_Endpoint;
 
-    RDMA_Session(RDMA_Pre* pre);
+    RDMA_Session(char* dev_name = NULL);
     ~RDMA_Session();
 
+    RDMA_Endpoint* add_connection(RDMA_Pre* pre);
     void stop_process();
     
     const static int CQ_SIZE = 1000;
-    // 
-    RDMA_Endpoint* endpoint_;
+    std::vector<RDMA_Endpoint*> endpoint_table;
 
 private:
     int open_ib_device();
     void session_processCQ();
 
+    char* dev_name_;
     // device handle
     ibv_context* context_;
     // ibverbs protection domain
@@ -46,8 +47,6 @@ private:
 
     //std::thread* thread_;
     std::unique_ptr<std::thread> thread_;
-
-    config_t config;
 };
 
 #endif // !RDMA_SESSION_H

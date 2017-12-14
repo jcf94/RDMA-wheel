@@ -10,9 +10,10 @@ PROG	: RDMA_SESSION_CPP
 
 #define MSG_SIZE 20
 
-RDMA_Session::RDMA_Session(RDMA_Pre* pre)
-    : config(pre->config)
+RDMA_Session::RDMA_Session(char* dev_name)
 {
+    dev_name_ = dev_name;
+
     // init all of the resources, so cleanup will be easy
     if (open_ib_device())
     {
@@ -53,12 +54,6 @@ RDMA_Session::RDMA_Session(RDMA_Pre* pre)
     //thread_ = new std::thread(std::bind(&RDMA_Adapter::Adapter_processCQ, this));
     thread_.reset(new std::thread(std::bind(&RDMA_Session::session_processCQ, this)));
 
-    endpoint_ = new RDMA_Endpoint(this, config.ib_port);
-
-    pre->tcp_endpoint_connect(endpoint_);
-
-    endpoint_->connect();
-    
     log_info("RDMA_Session Created");
 }
 
@@ -66,7 +61,8 @@ RDMA_Session::~RDMA_Session()
 {
     stop_process();
 
-    delete endpoint_;
+    for (auto i:endpoint_table)
+        delete i;
     
     thread_.reset();
     
@@ -113,7 +109,7 @@ int RDMA_Session::open_ib_device()
     }
     log_info(make_string("found %d device(s)", num_devices));
 
-    if (!config.dev_name)
+    if (!dev_name_)
     {
         ib_dev = *dev_list;
         if (!ib_dev)
@@ -126,7 +122,7 @@ int RDMA_Session::open_ib_device()
         // search for the specific device we want to work with
         for (i = 0; i < num_devices; i ++)
         {
-            if (!strcmp(ibv_get_device_name(dev_list[i]), config.dev_name))
+            if (!strcmp(ibv_get_device_name(dev_list[i]), dev_name_))
             {
                 ib_dev = dev_list[i];
                 break;
@@ -135,7 +131,7 @@ int RDMA_Session::open_ib_device()
         // if the device wasn't found in host
         if (!ib_dev)
         {
-            log_error(make_string("IB device %s wasn't found", config.dev_name));
+            log_error(make_string("IB device %s wasn't found", dev_name_));
             return 1;
         }
     }
@@ -144,11 +140,22 @@ int RDMA_Session::open_ib_device()
     context_ = ibv_open_device(ib_dev);
     if (!context_)
     {
-        log_error(make_string("failed to open device %s", config.dev_name));
+        log_error(make_string("failed to open device %s", dev_name_));
         return 1;
     }
 
     return 0;
+}
+
+RDMA_Endpoint* RDMA_Session::add_connection(RDMA_Pre* pre)
+{
+    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(this, pre->config.ib_port);
+    endpoint_table.push_back(new_endpoint);
+
+    pre->tcp_endpoint_connect(new_endpoint);
+    new_endpoint->connect();
+
+    return new_endpoint;
 }
 
 void RDMA_Session::stop_process()
@@ -226,6 +233,10 @@ void RDMA_Session::session_processCQ()
                             break;
                         }
                         case RDMA_MESSAGE_CLOSE:
+                            rc->send_message(RDMA_MESSAGE_TERMINATE);
+                            //doit = false;
+                            break;
+                        case RDMA_MESSAGE_TERMINATE:
                             doit = false;
                             break;
                         default:

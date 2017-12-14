@@ -14,7 +14,8 @@ enum Message_type
     RDMA_MESSAGE_ACK,
     RDMA_MESSAGE_BUFFER_UNLOCK,
     RDMA_MESSAGE_READ_REQUEST,
-    RDMA_MESSAGE_CLOSE
+    RDMA_MESSAGE_CLOSE,
+    RDMA_MESSAGE_TERMINATE
 };
 
 std::string get_message(Message_type msgt);
@@ -55,6 +56,7 @@ private:
 
     RDMA_Buffer* incoming_;
     RDMA_Buffer* outgoing_;
+
     Remote_MR remote_mr_;
 };
 

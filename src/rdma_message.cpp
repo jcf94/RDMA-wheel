@@ -22,6 +22,9 @@ std::string get_message(Message_type msgt)
         case RDMA_MESSAGE_CLOSE:
             return "RDMA_MESSAGE_CLOSE";
             break;
+        case RDMA_MESSAGE_TERMINATE:
+            return "RDMA_MESSAGE_TERMINATE";
+            break;
         default:
             return "UNKNOWN MESSAGE";
     }
@@ -81,6 +84,7 @@ void RDMA_Message::send(Message_type msgt, Remote_info* msg)
         case RDMA_MESSAGE_ACK:
         case RDMA_MESSAGE_BUFFER_UNLOCK:
         case RDMA_MESSAGE_CLOSE:
+        case RDMA_MESSAGE_TERMINATE:
         {
             write(msgt, 0);
             break;
@@ -98,6 +102,7 @@ void RDMA_Message::send(Message_type msgt, Remote_info* msg)
             memcpy(&target[kRkeyStartIndex], &(test_new->mr_->rkey), sizeof(test_new->mr_->rkey));
             
             write(msgt, kMessageTotalBytes);
+            
             break;
         }
         default:

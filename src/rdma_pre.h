@@ -25,7 +25,6 @@ public:
     int tcp_endpoint_connect(RDMA_Endpoint* endpoint);
 
     config_t config = {
-        NULL,               // dev_name
         NULL,               // server_name
         23333,              // tcp_port
         1                   // ib_port
