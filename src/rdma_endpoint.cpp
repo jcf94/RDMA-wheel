@@ -106,22 +106,22 @@ void RDMA_Endpoint::send_message(Message_type msgt)
 
 void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Remote_info msg)
 {
-	struct ibv_sge list;
-	list.addr = (uint64_t) buffer->buffer_;
-	list.length = msg.buffer_size_;
-	list.lkey = buffer->mr_->lkey;
+    struct ibv_sge list;
+    list.addr = (uint64_t) buffer->buffer_;
+    list.length = msg.buffer_size_;
+    list.lkey = buffer->mr_->lkey;
 
-	struct ibv_send_wr wr;
-	memset(&wr, 0, sizeof(wr));
-	wr.wr_id = (uint64_t) buffer;
-	wr.sg_list = &list;
-	wr.num_sge = 1;
-	wr.opcode = IBV_WR_RDMA_READ;
-	wr.send_flags = IBV_SEND_SIGNALED;
-	wr.wr.rdma.remote_addr = (uint64_t) msg.remote_addr_;
-	wr.wr.rdma.rkey = msg.rkey_;
+    struct ibv_send_wr wr;
+    memset(&wr, 0, sizeof(wr));
+    wr.wr_id = (uint64_t) buffer;
+    wr.sg_list = &list;
+    wr.num_sge = 1;
+    wr.opcode = IBV_WR_RDMA_READ;
+    wr.send_flags = IBV_SEND_SIGNALED;
+    wr.wr.rdma.remote_addr = (uint64_t) msg.remote_addr_;
+    wr.wr.rdma.rkey = msg.rkey_;
 
-	struct ibv_send_wr *bad_wr;
+    struct ibv_send_wr *bad_wr;
     if (ibv_post_send(qp_, &wr, &bad_wr))
     {
         log_error("Failed to post send");
@@ -130,26 +130,26 @@ void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Remote_info msg)
 
 int RDMA_Endpoint::modify_qp_to_init()
 {
-	struct ibv_qp_attr attr;
-	int flags;
-	int rc;
+    struct ibv_qp_attr attr;
+    int flags;
+    int rc;
 
-	// do the following QP transition: RESET -> INIT
-	memset(&attr, 0, sizeof(attr));
-	attr.qp_state = IBV_QPS_INIT;
-	attr.port_num = ib_port_;
-	attr.pkey_index = 0;
-	attr.qp_access_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ;
+    // do the following QP transition: RESET -> INIT
+    memset(&attr, 0, sizeof(attr));
+    attr.qp_state = IBV_QPS_INIT;
+    attr.port_num = ib_port_;
+    attr.pkey_index = 0;
+    attr.qp_access_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ;
 
-	flags = IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT | IBV_QP_ACCESS_FLAGS;
+    flags = IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT | IBV_QP_ACCESS_FLAGS;
 
-	rc = ibv_modify_qp(qp_, &attr, flags);
-	if (rc) {
-		fprintf(stderr, "failed to modify QP state to INIT\n");
-		return rc;
-	}
+    rc = ibv_modify_qp(qp_, &attr, flags);
+    if (rc) {
+        fprintf(stderr, "failed to modify QP state to INIT\n");
+        return rc;
+    }
 
-	return 0;
+    return 0;
 }
 
 int RDMA_Endpoint::modify_qp_to_rtr()

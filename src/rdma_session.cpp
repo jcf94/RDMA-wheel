@@ -7,6 +7,7 @@ PROG	: RDMA_SESSION_CPP
 #include "rdma_session.h"
 #include <string.h>
 #include <stdio.h>
+#include <functional>
 
 #define MSG_SIZE 20
 

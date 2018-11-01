@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -g3
+CXXFLAGS = -std=c++14 -g3
 
 SRC = $(wildcard src/*.cpp)
 OBJ = $(patsubst %.cpp,%.o,$(SRC))
