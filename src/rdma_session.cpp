@@ -4,10 +4,13 @@ LANG	: G++
 PROG	: RDMA_SESSION_CPP
 ************************************************ */
 
-#include "rdma_session.h"
 #include <string.h>
 #include <stdio.h>
 #include <functional>
+
+#include "rdma_session.h"
+#include "rdma_endpoint.h"
+#include "rdma_pre.h"
 
 #define MSG_SIZE 20
 

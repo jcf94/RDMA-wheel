@@ -19,7 +19,7 @@ enum Buffer_status
 class RDMA_Buffer
 {
 public:
-    friend class RDMA_Pre;
+    friend class TCP_Sock_Pre;
     friend class RDMA_Endpoint;
     friend class RDMA_Message;
     friend class RDMA_Session;

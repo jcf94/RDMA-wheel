@@ -38,7 +38,7 @@ static const size_t kMessageTotalBytes = kRkeyStartIndex + sizeof(Remote_info::r
 class RDMA_Message
 {
 public:
-    friend class RDMA_Pre;
+    friend class TCP_Sock_Pre;
     friend class RDMA_Session;
     friend class RDMA_Endpoint;
 

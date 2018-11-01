@@ -8,8 +8,6 @@ PROG	: RDMA_SESSION_H
 #define RDMA_SESSION_H
 
 #include "rdma_util.h"
-#include "rdma_endpoint.h"
-#include "rdma_pre.h"
 
 class RDMA_Endpoint;
 class RDMA_Pre;

@@ -5,6 +5,8 @@ PROG	: RDMA_MAIN
 ************************************************ */
 
 #include "src/rdma_session.h"
+#include "src/rdma_endpoint.h"
+#include "src/tcp_sock_pre.h"
 
 int main(int argc, char* argv[])
 {
@@ -17,7 +19,7 @@ int main(int argc, char* argv[])
         log_error("xxx c\tto start the client");
     } else
     {
-        RDMA_Pre pre_tcp;
+        TCP_Sock_Pre pre_tcp;
 
         // Connect
         if (strcmp(argv[1], "s") == 0)
@@ -29,8 +31,8 @@ int main(int argc, char* argv[])
             if (argc == 2) pre_tcp.config.server_name = LOCALHOST;
             else pre_tcp.config.server_name = argv[2];
         }
-        pre_tcp.print_config();
-        pre_tcp.tcp_sock_connect();
+
+        pre_tcp.pre_connect();
 
         RDMA_Session session;
         RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);

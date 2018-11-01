@@ -9,10 +9,8 @@ PROG	: RDMA_ENDPOINT_H
 
 #include <map>
 
-#include "rdma_session.h"
 #include "rdma_message.h"
 
-class RDMA_Buffer;
 class RDMA_Session;
 
 class RDMA_Endpoint
