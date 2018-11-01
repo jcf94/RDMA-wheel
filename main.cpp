@@ -10,7 +10,6 @@ PROG	: RDMA_MAIN
 
 int main(int argc, char* argv[])
 {
-    
     if (argc == 1)
     {
         log_error("Missing Start Up Config");
@@ -42,7 +41,6 @@ int main(int argc, char* argv[])
             
         } else if (strcmp(argv[1], "c") == 0)
         {
-
             endpoint->send_message(RDMA_MESSAGE_READ_REQUEST);
             endpoint->send_message(RDMA_MESSAGE_CLOSE);
             endpoint->send_message(RDMA_MESSAGE_TERMINATE);
