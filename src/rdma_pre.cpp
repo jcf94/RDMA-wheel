@@ -43,6 +43,7 @@ void RDMA_Pre::print_config()
 
 void RDMA_Pre::tcp_sock_connect()
 {
+    // Client Side
     if (config.server_name)
     {
         remote_sock_ = sock_client_connect(config.server_name, config.tcp_port);
@@ -50,9 +51,10 @@ void RDMA_Pre::tcp_sock_connect()
             log_error(make_string("failed to establish TCP connection to server %s, port %d", config.server_name, config.tcp_port));
             return;
         }
-    } else 
+    } else
+    // Server Side
     {
-        log_ok(make_string("waiting on port %d for TCP connection\n", config.tcp_port));
+        log_ok(make_string("waiting on port %d for TCP connection", config.tcp_port));
         remote_sock_ = sock_daemon_connect(config.tcp_port);
         if (remote_sock_ < 0) {
             log_error(make_string("failed to establish TCP connection with client on port %d", config.tcp_port));

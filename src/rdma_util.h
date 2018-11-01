@@ -120,14 +120,6 @@ struct Remote_MR
     uint32_t rkey;
 };
 
-/* structure of test parameters */
-struct config_t
-{
-    char *server_name;  /* daemon host name */
-    uint32_t tcp_port;  /* daemon TCP port */
-    int ib_port;        /* local IB port to work with */
-};
-
 // ---- RDMA
 
 #endif // !RDMA_UTIL_H

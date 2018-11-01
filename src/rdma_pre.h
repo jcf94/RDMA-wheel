@@ -12,6 +12,14 @@ PROG	: RDMA_PRE_H
 
 static char LOCALHOST[] = "localhost";
 
+/* structure of test parameters */
+struct config_t
+{
+    char *server_name;  /* daemon host name */
+    uint32_t tcp_port;  /* daemon TCP port */
+    int ib_port;        /* local IB port to work with */
+};
+
 class RDMA_Endpoint;
 
 class RDMA_Pre
