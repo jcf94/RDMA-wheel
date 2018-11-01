@@ -120,6 +120,15 @@ struct Remote_MR
     uint32_t rkey;
 };
 
+// structure to exchange data which is needed to connect the QPs
+struct cm_con_data_t {
+    uint64_t    maddr;      // Buffer address
+    uint32_t    mrkey;      // Remote key
+    uint32_t    qpn;        // QP number
+    uint32_t    lid;        // LID of the IB port
+    uint32_t    psn;
+} __attribute__ ((packed));
+
 // ---- RDMA
 
 #endif // !RDMA_UTIL_H

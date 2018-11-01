@@ -25,7 +25,7 @@ public:
 
     RDMA_Endpoint* add_connection(RDMA_Pre* pre);
     void stop_process();
-    
+
     const static int CQ_SIZE = 1000;
     std::vector<RDMA_Endpoint*> endpoint_table;
 

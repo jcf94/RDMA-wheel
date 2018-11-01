@@ -10,15 +10,7 @@ PROG	: RDMA_PRE_CPP
 #include <unistd.h>
 
 #include "rdma_pre.h"
-
-// structure to exchange data which is needed to connect the QPs
-struct cm_con_data_t {
-    uint64_t    maddr;      // Buffer address
-    uint32_t    mrkey;      // Remote key
-    uint32_t    qpn;        // QP number
-    uint32_t    lid;        // LID of the IB port
-    uint32_t    psn;
-} __attribute__ ((packed));
+#include "rdma_util.h"
 
 RDMA_Pre::RDMA_Pre()
 {
@@ -32,7 +24,7 @@ RDMA_Pre::~RDMA_Pre()
 
 void RDMA_Pre::print_config()
 {
-    log_func();
+    //log_func();
     fprintf(stdout, " ------------------------------------------------\n");
     fprintf(stdout, " IB port                      : %u\n", config.ib_port);
     if (config.server_name)
@@ -41,6 +33,21 @@ void RDMA_Pre::print_config()
     fprintf(stdout, " ------------------------------------------------\n\n");
 }
 
+cm_con_data_t RDMA_Pre::exchange_qp_data(cm_con_data_t local_con_data)
+{
+    cm_con_data_t remote_con_data;
+
+    if (sock_sync_data(remote_sock_, !config.server_name, sizeof(cm_con_data_t), &local_con_data, &remote_con_data) < 0)
+    {
+        log_error("failed to exchange connection data between sides");
+    }
+
+    return remote_con_data;
+}
+
+/*****************************************
+* Function: tcp_sock_connect
+*****************************************/
 void RDMA_Pre::tcp_sock_connect()
 {
     // Client Side
@@ -62,43 +69,6 @@ void RDMA_Pre::tcp_sock_connect()
         }
     }
     log_ok("TCP connection was established");
-}
-
-int RDMA_Pre::tcp_endpoint_connect(RDMA_Endpoint* endpoint)
-{
-    struct cm_con_data_t local_con_data, tmp_con_data;
-    int rc;
-    
-    // exchange using TCP sockets info required to connect QPs
-    local_con_data.maddr = htonll((uintptr_t)endpoint->message_->incoming_->buffer_);
-    local_con_data.mrkey = htonl(endpoint->message_->incoming_->mr_->rkey);
-    local_con_data.qpn = htonl(endpoint->self_.qpn);
-    local_con_data.lid = htonl(endpoint->self_.lid);
-    local_con_data.psn = htonl(endpoint->self_.psn);
-
-    log_info(make_string("Local QP number  = 0x%x", endpoint->self_.qpn));
-    log_info(make_string("Local LID        = 0x%x", endpoint->self_.lid));
-    log_info(make_string("Local PSN        = 0x%x", endpoint->self_.psn));
-
-    if (sock_sync_data(remote_sock_, !config.server_name, sizeof(struct cm_con_data_t), &local_con_data, &tmp_con_data) < 0)
-    {
-        log_error("failed to exchange connection data between sides");
-        return 1;
-    }
-
-    endpoint->message_->remote_mr_.remote_addr = ntohll(tmp_con_data.maddr);
-    endpoint->message_->remote_mr_.rkey = ntohl(tmp_con_data.mrkey);
-    endpoint->remote_.qpn = ntohl(tmp_con_data.qpn);
-    endpoint->remote_.lid = ntohl(tmp_con_data.lid);
-    endpoint->remote_.psn = ntohl(tmp_con_data.psn);
-
-    /* save the remote side attributes, we will need it for the post SR */
-
-    //fprintf(stdout, "Remote address   = 0x%"PRIx64"\n", remote_con_data.addr);
-    //fprintf(stdout, "Remote rkey      = 0x%x\n", remote_con_data.rkey);
-    log_info(make_string("Remote QP number = 0x%x", endpoint->remote_.qpn));
-    log_info(make_string("Remote LID       = 0x%x", endpoint->remote_.lid));
-    log_info(make_string("Remote PSN       = 0x%x", endpoint->remote_.psn));
 }
 
 /*****************************************
@@ -216,7 +186,7 @@ int RDMA_Pre::sock_recv(int sock_fd, size_t size, void *buf)
 {
     int rc;
 
-retry_after_signal:
+    retry_after_signal:
     rc = recv(sock_fd, buf, size, MSG_WAITALL);
     if (rc != size) {
         fprintf(stderr, "recv failed: %s, rc=%d\n", strerror(errno), rc);
@@ -240,7 +210,7 @@ int RDMA_Pre::sock_send(int sock_fd, size_t size, const void *buf)
     int rc;
 
 
-retry_after_signal:
+    retry_after_signal:
     rc = send(sock_fd, buf, size, 0);
 
     if (rc != size) {
@@ -263,7 +233,6 @@ retry_after_signal:
 int RDMA_Pre::sock_sync_data(int sock_fd, int is_daemon, size_t size, const void *out_buf, void *in_buf)
 {
     int rc;
-
 
     if (is_daemon) {
         rc = sock_send(sock_fd, size, out_buf);

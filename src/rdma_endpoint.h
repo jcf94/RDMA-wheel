@@ -18,7 +18,6 @@ class RDMA_Session;
 class RDMA_Endpoint
 {
 public:
-    friend class RDMA_Pre;
     friend class RDMA_Buffer;
     friend class RDMA_Message;
     friend class RDMA_Session;
@@ -26,7 +25,9 @@ public:
     RDMA_Endpoint(RDMA_Session* session, int ib_port);
     ~RDMA_Endpoint();
 
-    void connect();
+
+    struct cm_con_data_t get_local_con_data();
+    void connect(struct cm_con_data_t remote_con_data);
     void recv();
     void send_message(Message_type msgt);
     void read_data(RDMA_Buffer* buffer, Remote_info msg);

@@ -153,8 +153,7 @@ RDMA_Endpoint* RDMA_Session::add_connection(RDMA_Pre* pre)
     RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(this, pre->config.ib_port);
     endpoint_table.push_back(new_endpoint);
 
-    pre->tcp_endpoint_connect(new_endpoint);
-    new_endpoint->connect();
+    new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
 
     return new_endpoint;
 }

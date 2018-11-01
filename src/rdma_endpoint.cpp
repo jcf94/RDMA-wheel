@@ -4,7 +4,10 @@ LANG	: G++
 PROG	: RDMA_ENDPOINT_CPP
 ************************************************ */
 
+#include <netdb.h>
+
 #include "rdma_endpoint.h"
+#include "rdma_util.h"
 
 RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
     : session_(session), ib_port_(ib_port), connected_(false)
@@ -29,7 +32,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
         // return 1;
     }
     
-    log_info(make_string("QP was created, QP number=0x%x\n", qp_->qp_num));
+    log_info(make_string("QP was created, QP number=0x%x", qp_->qp_num));
 
     modify_qp_to_init();
 
@@ -73,13 +76,44 @@ RDMA_Endpoint::~RDMA_Endpoint()
     log_info("RDMA_Endpoint Deleted");
 }
 
-void RDMA_Endpoint::connect()
+cm_con_data_t RDMA_Endpoint::get_local_con_data()
+{
+    cm_con_data_t local_con_data;
+    // exchange using TCP sockets info required to connect QPs
+    local_con_data.maddr = htonll((uintptr_t)message_->incoming_->buffer_);
+    local_con_data.mrkey = htonl(message_->incoming_->mr_->rkey);
+    local_con_data.qpn = htonl(self_.qpn);
+    local_con_data.lid = htonl(self_.lid);
+    local_con_data.psn = htonl(self_.psn);
+
+    log_info(make_string("Local QP number  = 0x%x", self_.qpn));
+    log_info(make_string("Local LID        = 0x%x", self_.lid));
+    log_info(make_string("Local PSN        = 0x%x", self_.psn));
+
+    return local_con_data;
+}
+
+void RDMA_Endpoint::connect(cm_con_data_t remote_con_data)
 {
     if (connected_)
     {
         log_info("Channel Already Connected.");
     } else
     {
+        message_->remote_mr_.remote_addr = ntohll(remote_con_data.maddr);
+        message_->remote_mr_.rkey = ntohl(remote_con_data.mrkey);
+        remote_.qpn = ntohl(remote_con_data.qpn);
+        remote_.lid = ntohl(remote_con_data.lid);
+        remote_.psn = ntohl(remote_con_data.psn);
+
+        /* save the remote side attributes, we will need it for the post SR */
+
+        //fprintf(stdout, "Remote address   = 0x%"PRIx64"\n", remote_con_data.addr);
+        //fprintf(stdout, "Remote rkey      = 0x%x\n", remote_con_data.rkey);
+        log_info(make_string("Remote QP number = 0x%x", remote_.qpn));
+        log_info(make_string("Remote LID       = 0x%x", remote_.lid));
+        log_info(make_string("Remote PSN       = 0x%x", remote_.psn));
+
         modify_qp_to_rtr();
         modify_qp_to_rts();
 

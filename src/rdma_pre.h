@@ -7,9 +7,6 @@ PROG	: RDMA_PRE_H
 #ifndef RDMA_PRE_H
 #define RDMA_PRE_H
 
-#include "rdma_util.h"
-#include "rdma_endpoint.h"
-
 static char LOCALHOST[] = "localhost";
 
 /* structure of test parameters */
@@ -20,8 +17,6 @@ struct config_t
     int ib_port;        /* local IB port to work with */
 };
 
-class RDMA_Endpoint;
-
 class RDMA_Pre
 {
 public:
@@ -30,7 +25,7 @@ public:
 
     void print_config();
     void tcp_sock_connect();
-    int tcp_endpoint_connect(RDMA_Endpoint* endpoint);
+    struct cm_con_data_t exchange_qp_data(struct cm_con_data_t local_con_data);
 
     config_t config = {
         NULL,               // server_name
