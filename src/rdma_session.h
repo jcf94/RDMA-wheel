@@ -24,6 +24,8 @@ public:
     RDMA_Endpoint* add_connection(RDMA_Pre* pre);
     void stop_process();
 
+    ibv_pd* pd();
+
     const static int CQ_SIZE = 1000;
 
 private:

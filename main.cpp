@@ -39,23 +39,24 @@ int main(int argc, char* argv[])
 
         RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);
 
-        std::cout << " ============================\n";
-
         if (strcmp(argv[1], "s") == 0)
         {
-            
+            char a[] = "Hello World from Server !!!!!";
+            endpoint->send_data((void*)a, sizeof(a));
+
         } else if (strcmp(argv[1], "c") == 0)
         {
-            endpoint->send_message(RDMA_MESSAGE_READ_REQUEST);
+            char a[] = "Hello World from Client !!!!!";
+            endpoint->send_data((void*)a, sizeof(a));
 
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            char b[] = "Test Test Test Test Test Test Test Test Test";
+            endpoint->send_data((void*)b, sizeof(b));
 
-            endpoint->send_message(RDMA_MESSAGE_CLOSE);
-            endpoint->send_message(RDMA_MESSAGE_TERMINATE);
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+
+            endpoint->close();
         }
-
-        std::cout << " ============================\n";
     }
-    
+
     return 0;
 }

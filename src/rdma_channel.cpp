@@ -57,37 +57,33 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
             });
             break;
         }
-        case RDMA_MESSAGE_READ_REQUEST:
-        {
-            std::thread* work_thread = new std::thread([this, msgt, addr](){
-
-                {
-                    std::unique_lock<std::mutex> lock(channel_cv_mutex_);
-                    while (local_status_ == LOCK || remote_status_ == LOCK)
-                        channel_cv_.wait(lock);
-                    local_status_ = LOCK;
-                    remote_status_ = LOCK;
-                }
-
-                char* target = (char*)outgoing_->buffer_;
-
-                char a[] = "helloworld";
-                RDMA_Buffer* test_new = new RDMA_Buffer(endpoint_, pd_, sizeof(a));
-                memcpy(test_new->buffer_, &a, sizeof(a));
-
-                endpoint_->insert_to_table((uint64_t)test_new->buffer_, (uint64_t)test_new);
-
-                memcpy(&target[kBufferSizeStartIndex], &(test_new->size_), sizeof(test_new->size_));
-                memcpy(&target[kRemoteAddrStartIndex], &(test_new->buffer_), sizeof(test_new->buffer_));
-                memcpy(&target[kRkeyStartIndex], &(test_new->mr_->rkey), sizeof(test_new->mr_->rkey));
-
-                write(msgt, kMessageTotalBytes);
-            });
-            break;
-        }
         default:
             log_error("Unsupported Message Type");
     }
+}
+
+void RDMA_Channel::request_read(RDMA_Buffer* buffer)
+{
+    std::thread* work_thread = new std::thread([this, buffer](){
+
+        {
+            std::unique_lock<std::mutex> lock(channel_cv_mutex_);
+            while (local_status_ == LOCK || remote_status_ == LOCK)
+                channel_cv_.wait(lock);
+            local_status_ = LOCK;
+            remote_status_ = LOCK;
+        }
+
+        char* target = (char*)outgoing_->buffer_;
+
+        endpoint_->insert_to_table((uint64_t)buffer->buffer_, (uint64_t)buffer);
+
+        memcpy(&target[kBufferSizeStartIndex], &(buffer->size_), sizeof(buffer->size_));
+        memcpy(&target[kRemoteAddrStartIndex], &(buffer->buffer_), sizeof(buffer->buffer_));
+        memcpy(&target[kRkeyStartIndex], &(buffer->mr_->rkey), sizeof(buffer->mr_->rkey));
+
+        write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
+    });
 }
 
 void RDMA_Channel::write(uint32_t imm_data, size_t size)

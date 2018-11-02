@@ -237,7 +237,7 @@ void RDMA_Session::session_processCQ()
                             char* temp = (char*)endpoint->channel_->incoming_->buffer_;
                             Remote_info msg;
                             memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
-                            endpoint->send_message(RDMA_MESSAGE_ACK);
+                            endpoint->channel_->send_message(RDMA_MESSAGE_ACK);
 
                             RDMA_Buffer* buf = (RDMA_Buffer*)endpoint->find_in_table((uint64_t)msg.remote_addr_);
                             delete buf;
@@ -251,7 +251,7 @@ void RDMA_Session::session_processCQ()
                             memcpy(&(msg.buffer_size_), &temp[kBufferSizeStartIndex], 8);
                             memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
                             memcpy(&(msg.rkey_), &temp[kRkeyStartIndex], 4);
-                            endpoint->send_message(RDMA_MESSAGE_ACK);
+                            endpoint->channel_->send_message(RDMA_MESSAGE_ACK);
 
                             RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, pd_, msg.buffer_size_);
 
@@ -292,7 +292,7 @@ void RDMA_Session::session_processCQ()
                             break;
                         }
                         case RDMA_MESSAGE_CLOSE:
-                            endpoint->send_message(RDMA_MESSAGE_TERMINATE);
+                            endpoint->channel_->send_message(RDMA_MESSAGE_TERMINATE);
                             status = CLOSING;
                             break;
                         case RDMA_MESSAGE_TERMINATE:
@@ -334,6 +334,7 @@ void RDMA_Session::session_processCQ()
                     log_ok(make_string("RDMA Read: %s", temp));
 
                     uint64_t res = rb->endpoint_->find_in_table((uint64_t)rb);
+                    //log_error(res);
                     rb->endpoint_->channel_->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
 
                     delete rb;
@@ -347,4 +348,9 @@ void RDMA_Session::session_processCQ()
             }
         }
     }
+}
+
+ibv_pd* RDMA_Session::pd()
+{
+    return pd_;
 }

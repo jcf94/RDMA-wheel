@@ -23,7 +23,7 @@ PROG	: RDMA_UTIL_H
 
 #include <infiniband/verbs.h>
 
-#define DEV_MODE
+//#define DEV_MODE
 
 // ---- WHEEL
 #ifdef _WIN32
@@ -73,11 +73,7 @@ PROG	: RDMA_UTIL_H
 #ifdef DEV_MODE
 #define VAL(x) do{std::cout << #x << " = " << (x) << std::endl;}while(false)
 #define VAL_ARRAY(a) do{std::cout << #a << " = ["; std::for_each(a, a + DIM(a), [](int val__){std::cout << " " << val__ << " ";}); std::cout << "]\n";}while(false)
-#ifdef _WIN32
-#define log_func() do{std::cerr << CYAN << "[Function] " << __FUNCTION__ << RESET << std::endl;}while(false)
-#else
 #define log_func() do{std::cerr << CYAN << "[Function] " << __PRETTY_FUNCTION__ << RESET << std::endl;}while(false)
-#endif // _WIN32
 #define log_info(x) do{std::cerr << CYAN << "[Info] " << x << " @" << __FILE__ << ":" << __LINE__ << RESET << std::endl;}while(false)
 #else
 #define VAL(x)

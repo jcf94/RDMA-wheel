@@ -10,7 +10,6 @@ PROG	: RDMA_ENDPOINT_H
 #include <map>
 
 #include "rdma_util.h"
-#include "rdma_message.h"
 
 class RDMA_Session;
 class RDMA_Channel;
@@ -19,7 +18,6 @@ class RDMA_Buffer;
 class RDMA_Endpoint
 {
 public:
-    friend class RDMA_Buffer;
     friend class RDMA_Session;
 
     RDMA_Endpoint(RDMA_Session* session, int ib_port);
@@ -27,15 +25,17 @@ public:
 
     struct cm_con_data_t get_local_con_data();
     void connect(struct cm_con_data_t remote_con_data);
-    void recv();
+    void close();
 
-    void send_message(enum Message_type msgt);
-    void read_data(RDMA_Buffer* buffer, struct Remote_info msg);
+    void send_data(void* addr, int size);
 
     uint64_t find_in_table(uint64_t key);
     void insert_to_table(uint64_t key, uint64_t value);
 
 private:
+    void read_data(RDMA_Buffer* buffer, struct Remote_info msg);
+    void recv();
+
     int modify_qp_to_init();
     int modify_qp_to_rtr();
     int modify_qp_to_rts();

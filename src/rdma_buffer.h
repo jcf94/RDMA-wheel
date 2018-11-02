@@ -14,16 +14,17 @@ class RDMA_Endpoint;
 class RDMA_Buffer
 {
 public:
-    friend class TCP_Sock_Pre;
     friend class RDMA_Endpoint;
     friend class RDMA_Channel;
     friend class RDMA_Session;
 
     RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size);
+    RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size, void* addr);
     ~RDMA_Buffer();
 
 private:
 
+    bool buffer_owned_;
     RDMA_Endpoint* endpoint_;
 
     void* buffer_ = NULL;

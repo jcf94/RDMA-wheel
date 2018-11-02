@@ -98,7 +98,7 @@ void RDMA_Endpoint::connect(cm_con_data_t remote_con_data)
 {
     if (connected_)
     {
-        log_info("Channel Already Connected.");
+        log_warning("Channel Already Connected.");
     } else
     {
         channel_->remote_mr_.remote_addr = ntohll(remote_con_data.maddr);
@@ -122,9 +122,23 @@ void RDMA_Endpoint::connect(cm_con_data_t remote_con_data)
     }
 }
 
-void RDMA_Endpoint::send_message(Message_type msgt)
+void RDMA_Endpoint::close()
 {
-    channel_->send_message(msgt);
+    if (connected_)
+    {
+        channel_->send_message(RDMA_MESSAGE_CLOSE);
+        channel_->send_message(RDMA_MESSAGE_TERMINATE);
+        connected_ = false;
+    } else
+    {
+        log_warning("Endpoint Already Closed");
+    }
+}
+
+void RDMA_Endpoint::send_data(void* addr, int size)
+{
+    RDMA_Buffer* new_buffer = new RDMA_Buffer(this, session_->pd(), size, addr);
+    channel_->request_read(new_buffer);
 }
 
 void RDMA_Endpoint::recv()
@@ -258,7 +272,14 @@ uint64_t RDMA_Endpoint::find_in_table(uint64_t key)
     {
         log_error("Request key not found in map_table");
         return 0;
-    } else return temp->second;
+    } else
+    {
+        uint64_t res = temp->second;
+        // Erase is important, if two RDMA_Buffer has same address
+        // the table find result will be a out of date value
+        map_table_.erase(temp);
+        return res;
+    }
 }
 
 void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)

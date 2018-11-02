@@ -33,6 +33,7 @@ public:
     ~RDMA_Channel();
 
     void send_message(Message_type msgt, uint64_t addr = 0);
+    void request_read(RDMA_Buffer* buffer);
 
 private:
     void write(uint32_t imm_data, size_t size);
