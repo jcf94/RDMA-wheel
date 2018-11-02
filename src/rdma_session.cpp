@@ -179,10 +179,8 @@ enum Session_status
 
 void RDMA_Session::session_processCQ()
 {
-    std::map<uint64_t, uint64_t> map_table;
-
-    Session_status doit = WORK;
-    while (doit == WORK || doit == CLOSING)
+    Session_status status = WORK;
+    while (status == WORK || status == CLOSING)
     {
         ibv_cq* cq;
         void* cq_context;
@@ -224,6 +222,7 @@ void RDMA_Session::session_processCQ()
             {
                 case IBV_WC_RECV_RDMA_WITH_IMM: // Recv Remote RDMA Write Message
                 {
+                    if (status != WORK) continue;
                     // Which RDMA_Endpoint get this message
                     RDMA_Endpoint* endpoint = reinterpret_cast<RDMA_Endpoint*>(wc_[i].wr_id);
                     // Consumed a ibv_post_recv, so add one
@@ -256,9 +255,8 @@ void RDMA_Session::session_processCQ()
 
                             RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, pd_, msg.buffer_size_);
 
-                            endpoint->map_table.insert(std::pair<uint64_t, uint64_t>(
-                                (uint64_t) test_new, (uint64_t) msg.remote_addr_
-                            ));
+                            endpoint->insert_to_table((uint64_t)test_new, (uint64_t)msg.remote_addr_
+                            );
 
                             endpoint->read_data(test_new, msg);
 
@@ -270,7 +268,7 @@ void RDMA_Session::session_processCQ()
                     }
                     break;
                 }
-                case IBV_WC_RECV: // Recv Remote RDMA Send Message
+                case IBV_WC_RECV:               // Recv Remote RDMA Send Message
                 {
                     // Which RDMA_Endpoint get this message
                     RDMA_Endpoint* endpoint = reinterpret_cast<RDMA_Endpoint*>(wc_[i].wr_id);
@@ -286,10 +284,10 @@ void RDMA_Session::session_processCQ()
                             break;
                         case RDMA_MESSAGE_CLOSE:
                             endpoint->send_message(RDMA_MESSAGE_TERMINATE);
-                            doit = CLOSING;
+                            status = CLOSING;
                             break;
                         case RDMA_MESSAGE_TERMINATE:
-                            doit = CLOSED;
+                            status = CLOSED;
                             break;
                         default:
                             log_error("Unsupported Message Type");
@@ -307,7 +305,7 @@ void RDMA_Session::session_processCQ()
 
                     break;
                 }
-                case IBV_WC_SEND: // Successfully Send RDMA Message
+                case IBV_WC_SEND:       // Successfully Send RDMA Message
                 {
                     // Which RDMA_Channel send this message/data
                     RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);

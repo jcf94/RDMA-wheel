@@ -26,11 +26,12 @@ public:
     struct cm_con_data_t get_local_con_data();
     void connect(struct cm_con_data_t remote_con_data);
     void recv();
+
     void send_message(enum Message_type msgt);
     void read_data(RDMA_Buffer* buffer, struct Remote_info msg);
 
-    std::map<uint64_t, uint64_t> map_table;
     uint64_t find_in_table(uint64_t key);
+    void insert_to_table(uint64_t key, uint64_t value);
 
 private:
     int modify_qp_to_init();
@@ -43,9 +44,12 @@ private:
     RDMA_Session* session_;
     // Queue Pair
     ibv_qp* qp_;
+
     RDMA_Address self_, remote_;
     // Message channel
     RDMA_Channel* channel_;
+
+    std::map<uint64_t, uint64_t> map_table_;
 };
 
 #endif // !RDMA_ENDPOINT_H

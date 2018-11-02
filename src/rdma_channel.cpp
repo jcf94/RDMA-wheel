@@ -25,6 +25,53 @@ RDMA_Channel::~RDMA_Channel()
     log_info("RDMA_Channel Deleted");
 }
 
+void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
+{
+    switch(msgt)
+    {
+        case RDMA_MESSAGE_ACK:
+        case RDMA_MESSAGE_CLOSE:
+        case RDMA_MESSAGE_TERMINATE:
+        {
+            send(msgt, 0);
+            break;
+        }
+        case RDMA_MESSAGE_BUFFER_UNLOCK:
+        {
+            local_status_ = LOCK;
+            remote_status_ = LOCK;
+            char* target = (char*)outgoing_->buffer_;
+            memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
+
+            write(msgt, kMessageTotalBytes);
+
+            break;
+        }
+        case RDMA_MESSAGE_READ_REQUEST:
+        {
+            local_status_ = LOCK;
+            remote_status_ = LOCK;
+            char* target = (char*)outgoing_->buffer_;
+
+            char a[] = "helloworld";
+            RDMA_Buffer* test_new = new RDMA_Buffer(endpoint_, pd_, sizeof(a));
+            memcpy(test_new->buffer_, &a, sizeof(a));
+
+            endpoint_->insert_to_table((uint64_t)test_new->buffer_, (uint64_t)test_new);
+
+            memcpy(&target[kBufferSizeStartIndex], &(test_new->size_), sizeof(test_new->size_));
+            memcpy(&target[kRemoteAddrStartIndex], &(test_new->buffer_), sizeof(test_new->buffer_));
+            memcpy(&target[kRkeyStartIndex], &(test_new->mr_->rkey), sizeof(test_new->mr_->rkey));
+
+            write(msgt, kMessageTotalBytes, (uint64_t)test_new);
+            
+            break;
+        }
+        default:
+            log_error("Unsupported Message Type");
+    }
+}
+
 void RDMA_Channel::write(uint32_t imm_data, size_t size, uint64_t wr_id)
 {
     struct ibv_sge list;
@@ -78,56 +125,5 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size, uint64_t wr_id)
     } else
     {
         log_info(make_string("Send Message post: %s", get_message((Message_type)imm_data).data()));
-    }
-}
-
-void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
-{
-    switch(msgt)
-    {
-        case RDMA_MESSAGE_ACK:
-        case RDMA_MESSAGE_CLOSE:
-        case RDMA_MESSAGE_TERMINATE:
-        {
-            send(msgt, 0);
-            break;
-        }
-        case RDMA_MESSAGE_BUFFER_UNLOCK:
-        {
-            local_status_ = LOCK;
-            remote_status_ = LOCK;
-            char* target = (char*)outgoing_->buffer_;
-            memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
-
-            write(msgt, kMessageTotalBytes);
-
-            break;
-        }
-        case RDMA_MESSAGE_READ_REQUEST:
-        {
-            local_status_ = LOCK;
-            remote_status_ = LOCK;
-            char* target = (char*)outgoing_->buffer_;
-
-            char a[] = "helloworld";
-            RDMA_Buffer* test_new = new RDMA_Buffer(endpoint_, pd_, sizeof(a));
-            memcpy(test_new->buffer_, &a, sizeof(a));
-
-            endpoint_->map_table.insert(std::pair<uint64_t, uint64_t>(
-                (uint64_t) test_new->buffer_, (uint64_t) test_new
-            ));
-
-            memcpy(&target[kBufferSizeStartIndex], &(test_new->size_), sizeof(test_new->size_));
-            memcpy(&target[kRemoteAddrStartIndex], &(test_new->buffer_), sizeof(test_new->buffer_));
-            memcpy(&target[kRkeyStartIndex], &(test_new->mr_->rkey), sizeof(test_new->mr_->rkey));
-
-            write(msgt, kMessageTotalBytes, (uint64_t)test_new);
-            
-            break;
-        }
-        default:
-        {
-
-        }
     }
 }

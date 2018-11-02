@@ -253,10 +253,15 @@ int RDMA_Endpoint::modify_qp_to_rts()
 
 uint64_t RDMA_Endpoint::find_in_table(uint64_t key)
 {
-    auto temp = map_table.find(key);
-    if (temp == map_table.end())
+    auto temp = map_table_.find(key);
+    if (temp == map_table_.end())
     {
         log_error("Request key not found in map_table");
         return 0;
     } else return temp->second;
+}
+
+void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)
+{
+    map_table_.insert(std::pair<uint64_t, uint64_t>(key, value));
 }

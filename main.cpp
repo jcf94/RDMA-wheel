@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         {
             endpoint->send_message(RDMA_MESSAGE_READ_REQUEST);
 
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::this_thread::sleep_for(std::chrono::seconds(1));
 
             endpoint->send_message(RDMA_MESSAGE_CLOSE);
             endpoint->send_message(RDMA_MESSAGE_TERMINATE);

@@ -33,7 +33,6 @@ public:
     void send_message(Message_type msgt, uint64_t addr = 0);
 
 private:
-    void ParseMessage(Message_type& rm, void* buffer);
     void write(uint32_t imm_data, size_t size, uint64_t wr_id = 0);
     void send(uint32_t imm_data, size_t size, uint64_t wr_id = 0);
 
