@@ -21,7 +21,7 @@ class RDMA_Buffer
 public:
     friend class TCP_Sock_Pre;
     friend class RDMA_Endpoint;
-    friend class RDMA_Message;
+    friend class RDMA_Channel;
     friend class RDMA_Session;
 
     RDMA_Buffer(ibv_pd* pd, int size);

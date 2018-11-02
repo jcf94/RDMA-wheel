@@ -7,6 +7,8 @@ PROG	: RDMA_MAIN
 #include "src/rdma_session.h"
 #include "src/rdma_endpoint.h"
 #include "src/tcp_sock_pre.h"
+#include <chrono>
+#include <thread>
 
 int main(int argc, char* argv[])
 {
@@ -18,6 +20,8 @@ int main(int argc, char* argv[])
         log_error("xxx c\tto start the client");
     } else
     {
+        RDMA_Session session;
+
         TCP_Sock_Pre pre_tcp;
 
         // Connect
@@ -33,8 +37,9 @@ int main(int argc, char* argv[])
 
         pre_tcp.pre_connect();
 
-        RDMA_Session session;
         RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);
+
+        //std::this_thread::sleep_for(std::chrono::seconds(2));
 
         if (strcmp(argv[1], "s") == 0)
         {
@@ -42,12 +47,12 @@ int main(int argc, char* argv[])
         } else if (strcmp(argv[1], "c") == 0)
         {
             endpoint->send_message(RDMA_MESSAGE_READ_REQUEST);
+
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+
             endpoint->send_message(RDMA_MESSAGE_CLOSE);
             endpoint->send_message(RDMA_MESSAGE_TERMINATE);
         }
-
-        //session.endpoint_->send_message(RDMA_MESSAGE_ACK);
-        //session.endpoint_->send_message(RDMA_MESSAGE_CLOSE);
     }
     
     return 0;

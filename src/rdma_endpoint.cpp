@@ -53,7 +53,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
     // // ACK Buffer ......
     // incoming_abuffer_ = new RDMA_Buffer(this, SIZE);
     // outgoing_abuffer_ = new RDMA_Buffer(this, SIZE);
-    message_ = new RDMA_Message(session_->pd_, qp_);
+    channel_ = new RDMA_Channel(session_->pd_, qp_);
 
     // post recv
     for (int i=0;i<100;i++)
@@ -66,7 +66,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
 
 RDMA_Endpoint::~RDMA_Endpoint()
 {
-    delete message_;
+    delete channel_;
 
     if (ibv_destroy_qp(qp_))
     {
@@ -80,8 +80,8 @@ cm_con_data_t RDMA_Endpoint::get_local_con_data()
 {
     cm_con_data_t local_con_data;
     // exchange using TCP sockets info required to connect QPs
-    local_con_data.maddr = htonll((uintptr_t)message_->incoming_->buffer_);
-    local_con_data.mrkey = htonl(message_->incoming_->mr_->rkey);
+    local_con_data.maddr = htonll((uintptr_t)channel_->incoming_->buffer_);
+    local_con_data.mrkey = htonl(channel_->incoming_->mr_->rkey);
     local_con_data.qpn = htonl(self_.qpn);
     local_con_data.lid = htonl(self_.lid);
     local_con_data.psn = htonl(self_.psn);
@@ -100,8 +100,8 @@ void RDMA_Endpoint::connect(cm_con_data_t remote_con_data)
         log_info("Channel Already Connected.");
     } else
     {
-        message_->remote_mr_.remote_addr = ntohll(remote_con_data.maddr);
-        message_->remote_mr_.rkey = ntohl(remote_con_data.mrkey);
+        channel_->remote_mr_.remote_addr = ntohll(remote_con_data.maddr);
+        channel_->remote_mr_.rkey = ntohl(remote_con_data.mrkey);
         remote_.qpn = ntohl(remote_con_data.qpn);
         remote_.lid = ntohl(remote_con_data.lid);
         remote_.psn = ntohl(remote_con_data.psn);
@@ -121,6 +121,11 @@ void RDMA_Endpoint::connect(cm_con_data_t remote_con_data)
     }
 }
 
+void RDMA_Endpoint::send_message(Message_type msgt)
+{
+    channel_->send(msgt);
+}
+
 void RDMA_Endpoint::recv()
 {
     struct ibv_recv_wr wr;
@@ -133,11 +138,6 @@ void RDMA_Endpoint::recv()
     }
 }
 
-void RDMA_Endpoint::send_message(Message_type msgt)
-{
-    message_->send(msgt);
-}
-
 void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Remote_info msg)
 {
     struct ibv_sge list;
@@ -147,7 +147,7 @@ void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Remote_info msg)
 
     struct ibv_send_wr wr;
     memset(&wr, 0, sizeof(wr));
-    wr.wr_id = (uint64_t) buffer;
+    wr.wr_id = (uint64_t) buffer; // The RDMA_Buffer used to store the data
     wr.sg_list = &list;
     wr.num_sge = 1;
     wr.opcode = IBV_WR_RDMA_READ;

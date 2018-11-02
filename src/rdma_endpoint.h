@@ -7,9 +7,7 @@ PROG	: RDMA_ENDPOINT_H
 #ifndef RDMA_ENDPOINT_H
 #define RDMA_ENDPOINT_H
 
-#include <map>
-
-#include "rdma_message.h"
+#include "rdma_channel.h"
 
 class RDMA_Session;
 
@@ -17,7 +15,7 @@ class RDMA_Endpoint
 {
 public:
     friend class RDMA_Buffer;
-    friend class RDMA_Message;
+    friend class RDMA_Channel;
     friend class RDMA_Session;
 
     RDMA_Endpoint(RDMA_Session* session, int ib_port);
@@ -29,6 +27,8 @@ public:
     void recv();
     void send_message(Message_type msgt);
     void read_data(RDMA_Buffer* buffer, Remote_info msg);
+
+    //std::map<uint64_t, uint64_t> map_table;
 
 private:
     int modify_qp_to_init();
@@ -43,8 +43,7 @@ private:
     ibv_qp* qp_;
     RDMA_Address self_, remote_;
     // Message Buffer
-    RDMA_Message* message_;
-    //std::map<RDMA_Buffer*> buffer_table_;
+    RDMA_Channel* channel_;
 };
 
 #endif // !RDMA_ENDPOINT_H

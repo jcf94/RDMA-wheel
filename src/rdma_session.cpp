@@ -227,11 +227,11 @@ void RDMA_Session::session_processCQ()
                     switch(msgt)
                     {
                         case RDMA_MESSAGE_ACK:
-                            rc->message_->outgoing_->status_ = IDLE;
+                            rc->channel_->outgoing_->status_ = IDLE;
                             break;
                         case RDMA_MESSAGE_BUFFER_UNLOCK:
                         {
-                            char* temp = (char*)rc->message_->incoming_->buffer_;
+                            char* temp = (char*)rc->channel_->incoming_->buffer_;
                             Remote_info msg;
                             memcpy(&(msg.buffer_size_), &temp[kBufferSizeStartIndex], 8);
                             memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
@@ -246,7 +246,7 @@ void RDMA_Session::session_processCQ()
                         case RDMA_MESSAGE_WRITE_REQUEST:
                         case RDMA_MESSAGE_READ_REQUEST:
                         {
-                            char* temp = (char*)rc->message_->incoming_->buffer_;
+                            char* temp = (char*)rc->channel_->incoming_->buffer_;
                             Remote_info msg;
                             memcpy(&(msg.buffer_size_), &temp[kBufferSizeStartIndex], 8);
                             memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
@@ -273,8 +273,8 @@ void RDMA_Session::session_processCQ()
                 }
                 case IBV_WC_RDMA_WRITE: // Successfully Send RDMA Message or Data
                 {
-                    // Which RDMA_Message send this message/data
-                    RDMA_Message* rm = reinterpret_cast<RDMA_Message*>(wc_[i].wr_id);
+                    // Which RDMA_Channel send this message/data
+                    RDMA_Channel* rm = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
                     
                     Message_type msgt = (Message_type)wc_[i].imm_data;
                     log_info(make_string("Message Recv: %s", get_message(msgt).data()));
