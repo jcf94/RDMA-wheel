@@ -26,11 +26,11 @@ void TCP_Sock_Pre::print_config()
 {
     //log_func();
     fprintf(stdout, " ------------------------------------------------\n");
-    fprintf(stdout, " IB port                      : %u\n", config.ib_port);
     if (config.server_name)
-        fprintf(stdout, " IP                           : %s\n", config.server_name);
+    fprintf(stdout, " Remote IP                    : %s\n", config.server_name);
+    fprintf(stdout, " IB port                      : %u\n", config.ib_port);
     fprintf(stdout, " TCP port                     : %u\n", config.tcp_port);
-    fprintf(stdout, " ------------------------------------------------\n\n");
+    fprintf(stdout, " ------------------------------------------------\n");
 }
 
 cm_con_data_t TCP_Sock_Pre::exchange_qp_data(cm_con_data_t local_con_data)

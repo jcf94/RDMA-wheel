@@ -39,8 +39,6 @@ int main(int argc, char* argv[])
 
         RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);
 
-        //std::this_thread::sleep_for(std::chrono::seconds(2));
-
         if (strcmp(argv[1], "s") == 0)
         {
             

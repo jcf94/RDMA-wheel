@@ -223,7 +223,7 @@ void RDMA_Session::session_processCQ()
                     endpoint->recv();
 
                     Message_type msgt = (Message_type)wc_[i].imm_data;
-                    log_ok(make_string("Message Recv: %s", get_message(msgt).data()));
+                    log_info(make_string("Message Recv: %s", get_message(msgt).data()));
                     switch(msgt)
                     {
                         case RDMA_MESSAGE_ACK:
