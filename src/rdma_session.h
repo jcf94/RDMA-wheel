@@ -25,7 +25,6 @@ public:
     void stop_process();
 
     const static int CQ_SIZE = 1000;
-    std::vector<RDMA_Endpoint*> endpoint_table;
 
 private:
     int open_ib_device();
@@ -40,9 +39,8 @@ private:
     ibv_comp_channel* event_channel_;
     // Completion queue, to poll on work completions
     ibv_cq* cq_;
-    // Pre-allocated work completions array used for polling
-    ibv_wc wc_[CQ_SIZE];
 
+    std::vector<RDMA_Endpoint*> endpoint_table_;
     //std::thread* thread_;
     std::unique_ptr<std::thread> thread_;
 };
