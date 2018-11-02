@@ -61,8 +61,7 @@ RDMA_Session::RDMA_Session(char* dev_name)
     }
 
     // Use a new thread to do the CQ processing
-    //thread_ = new std::thread(std::bind(&RDMA_Adapter::Adapter_processCQ, this));
-    thread_.reset(new std::thread(std::bind(&RDMA_Session::session_processCQ, this)));
+    process_thread_.reset(new std::thread(std::bind(&RDMA_Session::session_processCQ, this)));
 
     log_info("RDMA_Session Created");
 }
@@ -71,10 +70,10 @@ RDMA_Session::~RDMA_Session()
 {
     stop_process();
 
-    for (auto i:endpoint_table_)
+    for (auto i:endpoint_list_)
         delete i;
     
-    thread_.reset();
+    process_thread_.reset();
     
     if (ibv_destroy_cq(cq_))
     {
@@ -159,7 +158,7 @@ int RDMA_Session::open_ib_device()
 RDMA_Endpoint* RDMA_Session::add_connection(RDMA_Pre* pre)
 {
     RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(this, pre->config.ib_port);
-    endpoint_table_.push_back(new_endpoint);
+    endpoint_list_.push_back(new_endpoint);
 
     new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
 
@@ -168,7 +167,7 @@ RDMA_Endpoint* RDMA_Session::add_connection(RDMA_Pre* pre)
 
 void RDMA_Session::stop_process()
 {
-    thread_->join();
+    process_thread_->join();
 }
 
 void RDMA_Session::session_processCQ()

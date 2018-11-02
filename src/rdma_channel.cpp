@@ -7,33 +7,6 @@ PROG	: RDMA_CHANNEL_CPP
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 
-std::string get_message(Message_type msgt)
-{
-    switch(msgt)
-    {
-        case RDMA_MESSAGE_ACK:
-            return "RDMA_MESSAGE_ACK";
-            break;
-        case RDMA_MESSAGE_BUFFER_UNLOCK:
-            return "RDMA_MESSAGE_BUFFER_UNLOCK";
-            break;
-        case RDMA_MESSAGE_WRITE_REQUEST:
-            return "RDMA_MESSAGE_WRITE_REQUEST";
-            break;
-        case RDMA_MESSAGE_READ_REQUEST:
-            return "RDMA_MESSAGE_READ_REQUEST";
-            break;
-        case RDMA_MESSAGE_CLOSE:
-            return "RDMA_MESSAGE_CLOSE";
-            break;
-        case RDMA_MESSAGE_TERMINATE:
-            return "RDMA_MESSAGE_TERMINATE";
-            break;
-        default:
-            return "UNKNOWN MESSAGE";
-    }
-}
-
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     : endpoint_(endpoint), qp_(qp), pd_(pd), local_status_(IDLE), remote_status_(IDLE)
 {

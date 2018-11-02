@@ -39,10 +39,10 @@ private:
     ibv_comp_channel* event_channel_;
     // Completion queue, to poll on work completions
     ibv_cq* cq_;
-
-    std::vector<RDMA_Endpoint*> endpoint_table_;
-    //std::thread* thread_;
-    std::unique_ptr<std::thread> thread_;
+    // List of endpoints
+    std::vector<RDMA_Endpoint*> endpoint_list_;
+    // Thread used to process CQ
+    std::unique_ptr<std::thread> process_thread_;
 };
 
 #endif // !RDMA_SESSION_H
