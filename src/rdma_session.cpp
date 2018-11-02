@@ -227,18 +227,17 @@ void RDMA_Session::session_processCQ()
                     switch(msgt)
                     {
                         case RDMA_MESSAGE_ACK:
-                            endpoint->channel_->outgoing_->status_ = IDLE;
+                            endpoint->channel_->remote_status_ = IDLE;
                             break;
                         case RDMA_MESSAGE_BUFFER_UNLOCK:
                         {
                             char* temp = (char*)endpoint->channel_->incoming_->buffer_;
                             Remote_info msg;
                             memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
+                            endpoint->send_message(RDMA_MESSAGE_ACK);
 
                             RDMA_Buffer* buf = (RDMA_Buffer*)endpoint->find_in_table((uint64_t)msg.remote_addr_);
                             delete buf;
-
-                            endpoint->send_message(RDMA_MESSAGE_ACK);
 
                             break;
                         }
@@ -278,11 +277,11 @@ void RDMA_Session::session_processCQ()
                 case IBV_WC_RDMA_WRITE: // Successfully Send RDMA Message or Data
                 {
                     // Which RDMA_Channel send this message/data
-                    RDMA_Channel* rm = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
-                    
-                    Message_type msgt = (Message_type)wc_[i].imm_data;
-                    log_info(make_string("Message Recv: %s", get_message(msgt).data()));
-                    
+                    RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
+                    // Message sent success, unlock the channel outgoing
+                    channel->local_status_ = IDLE;
+                    log_info(make_string("Message Sent Success"));
+
                     break;
                 }
                 case IBV_WC_RDMA_READ:  // Successfully Read RDMA Data

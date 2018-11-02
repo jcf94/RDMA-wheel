@@ -7,7 +7,7 @@ PROG	: RDMA_BUFFER_CPP
 #include "rdma_buffer.h"
 
 RDMA_Buffer::RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size)
-    : endpoint_(endpoint), size_(size), status_(IDLE)
+    : endpoint_(endpoint), size_(size)
 {
     buffer_ = malloc(size_);
     mr_ = ibv_reg_mr(pd, buffer_, size_,

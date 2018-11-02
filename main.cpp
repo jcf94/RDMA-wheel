@@ -39,6 +39,8 @@ int main(int argc, char* argv[])
 
         RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);
 
+        std::cout << " ============================\n";
+
         if (strcmp(argv[1], "s") == 0)
         {
             
@@ -51,6 +53,8 @@ int main(int argc, char* argv[])
             endpoint->send_message(RDMA_MESSAGE_CLOSE);
             endpoint->send_message(RDMA_MESSAGE_TERMINATE);
         }
+
+        std::cout << " ============================\n";
     }
     
     return 0;

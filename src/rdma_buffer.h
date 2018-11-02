@@ -9,13 +9,6 @@ PROG	: RDMA_BUFFER_H
 
 #include "rdma_util.h"
 
-enum Buffer_status
-{
-    NONE,
-    IDLE,
-    LOCK
-};
-
 class RDMA_Endpoint;
 
 class RDMA_Buffer
@@ -36,7 +29,6 @@ private:
     void* buffer_ = NULL;
     uint64_t size_;
     ibv_mr* mr_;
-    Buffer_status status_;
 };
 
 #endif // !RDMA_BUFFER_H

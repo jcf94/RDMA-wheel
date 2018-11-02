@@ -159,6 +159,9 @@ void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Remote_info msg)
     if (ibv_post_send(qp_, &wr, &bad_wr))
     {
         log_error("Failed to post send");
+    } else
+    {
+        log_info(make_string("Send Message post: RDMA_READ"));
     }
 }
 

@@ -23,7 +23,7 @@ PROG	: RDMA_UTIL_H
 
 #include <infiniband/verbs.h>
 
-//#define DEV_MODE
+#define DEV_MODE
 
 // ---- WHEEL
 #ifdef _WIN32

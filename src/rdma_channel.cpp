@@ -35,7 +35,7 @@ std::string get_message(Message_type msgt)
 }
 
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
-    : endpoint_(endpoint), qp_(qp), pd_(pd)
+    : endpoint_(endpoint), qp_(qp), pd_(pd), local_status_(IDLE), remote_status_(IDLE)
 {
     // Create Message Buffer ......
     incoming_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
@@ -95,7 +95,8 @@ void RDMA_Channel::send(Message_type msgt, uint64_t addr)
         }
         case RDMA_MESSAGE_BUFFER_UNLOCK:
         {
-            outgoing_->status_ = LOCK;
+            local_status_ = LOCK;
+            remote_status_ = LOCK;
             char* target = (char*)outgoing_->buffer_;
             memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
 
@@ -105,7 +106,8 @@ void RDMA_Channel::send(Message_type msgt, uint64_t addr)
         }
         case RDMA_MESSAGE_READ_REQUEST:
         {
-            outgoing_->status_ = LOCK;
+            local_status_ = LOCK;
+            remote_status_ = LOCK;
             char* target = (char*)outgoing_->buffer_;
 
             char a[] = "helloworld";

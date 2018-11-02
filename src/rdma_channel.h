@@ -36,6 +36,13 @@ static const size_t kRemoteAddrStartIndex = kBufferSizeStartIndex + sizeof(Remot
 static const size_t kRkeyStartIndex = kRemoteAddrStartIndex + sizeof(Remote_info::remote_addr_);
 static const size_t kMessageTotalBytes = kRkeyStartIndex + sizeof(Remote_info::rkey_);
 
+enum Channel_status
+{
+    NONE,
+    IDLE,
+    LOCK
+};
+
 class RDMA_Endpoint;
 
 class RDMA_Channel
@@ -62,6 +69,9 @@ private:
     RDMA_Buffer* outgoing_;
 
     Remote_MR remote_mr_;
+
+    Channel_status local_status_;
+    Channel_status remote_status_;
 };
 
 #endif // !RDMA_CHANNEL_H
