@@ -7,12 +7,14 @@ PROG	: RDMA_CHANNEL_H
 #ifndef RDMA_CHANNEL_H
 #define RDMA_CHANNEL_H
 
+#include <mutex>
+#include <condition_variable>
+
 #include "rdma_buffer.h"
 #include "rdma_message.h"
 
 enum Channel_status
 {
-    NONE,
     IDLE,
     LOCK
 };
@@ -44,6 +46,9 @@ private:
     RDMA_Buffer* outgoing_;
 
     Remote_MR remote_mr_;
+
+    std::mutex channel_cv_mutex_;
+    std::condition_variable channel_cv_;
 
     Channel_status local_status_;
     Channel_status remote_status_;

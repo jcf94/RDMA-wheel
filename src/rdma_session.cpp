@@ -280,8 +280,17 @@ void RDMA_Session::session_processCQ()
                     switch(msgt)
                     {
                         case RDMA_MESSAGE_ACK:
-                            endpoint->channel_->remote_status_ = IDLE;
+                        {
+                            RDMA_Channel* channel = endpoint->channel_;
+
+                            std::thread* work_thread = new std::thread([channel](){
+                                std::lock_guard<std::mutex> lock(channel->channel_cv_mutex_);
+                                channel->remote_status_ = IDLE;
+                                channel->channel_cv_.notify_one();
+                            });
+
                             break;
+                        }
                         case RDMA_MESSAGE_CLOSE:
                             endpoint->send_message(RDMA_MESSAGE_TERMINATE);
                             status = CLOSING;
@@ -300,8 +309,13 @@ void RDMA_Session::session_processCQ()
                     // Which RDMA_Channel send this message/data
                     RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
                     // Message sent success, unlock the channel outgoing
-                    channel->local_status_ = IDLE;
                     log_info(make_string("Message Write Success"));
+
+                    std::thread* work_thread = new std::thread([channel](){
+                        std::lock_guard<std::mutex> lock(channel->channel_cv_mutex_);
+                        channel->local_status_ = IDLE;
+                        channel->channel_cv_.notify_one();
+                    });
 
                     break;
                 }

@@ -7,6 +7,8 @@ PROG	: RDMA_CHANNEL_CPP
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 
+#include <thread>
+
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     : endpoint_(endpoint), qp_(qp), pd_(pd), local_status_(IDLE), remote_status_(IDLE)
 {
@@ -38,33 +40,49 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
         }
         case RDMA_MESSAGE_BUFFER_UNLOCK:
         {
-            local_status_ = LOCK;
-            remote_status_ = LOCK;
-            char* target = (char*)outgoing_->buffer_;
-            memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
+            std::thread* work_thread = new std::thread([this, msgt, addr](){
 
-            write(msgt, kMessageTotalBytes);
+                {
+                    std::unique_lock<std::mutex> lock(channel_cv_mutex_);
+                    while (local_status_ == LOCK || remote_status_ == LOCK)
+                        channel_cv_.wait(lock);
+                    local_status_ = LOCK;
+                    remote_status_ = LOCK;
+                }
 
+                char* target = (char*)outgoing_->buffer_;
+                memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
+
+                write(msgt, kMessageTotalBytes);
+            });
             break;
         }
         case RDMA_MESSAGE_READ_REQUEST:
         {
-            local_status_ = LOCK;
-            remote_status_ = LOCK;
-            char* target = (char*)outgoing_->buffer_;
+            std::thread* work_thread = new std::thread([this, msgt, addr](){
 
-            char a[] = "helloworld";
-            RDMA_Buffer* test_new = new RDMA_Buffer(endpoint_, pd_, sizeof(a));
-            memcpy(test_new->buffer_, &a, sizeof(a));
+                {
+                    std::unique_lock<std::mutex> lock(channel_cv_mutex_);
+                    while (local_status_ == LOCK || remote_status_ == LOCK)
+                        channel_cv_.wait(lock);
+                    local_status_ = LOCK;
+                    remote_status_ = LOCK;
+                }
 
-            endpoint_->insert_to_table((uint64_t)test_new->buffer_, (uint64_t)test_new);
+                char* target = (char*)outgoing_->buffer_;
 
-            memcpy(&target[kBufferSizeStartIndex], &(test_new->size_), sizeof(test_new->size_));
-            memcpy(&target[kRemoteAddrStartIndex], &(test_new->buffer_), sizeof(test_new->buffer_));
-            memcpy(&target[kRkeyStartIndex], &(test_new->mr_->rkey), sizeof(test_new->mr_->rkey));
+                char a[] = "helloworld";
+                RDMA_Buffer* test_new = new RDMA_Buffer(endpoint_, pd_, sizeof(a));
+                memcpy(test_new->buffer_, &a, sizeof(a));
 
-            write(msgt, kMessageTotalBytes, (uint64_t)test_new);
-            
+                endpoint_->insert_to_table((uint64_t)test_new->buffer_, (uint64_t)test_new);
+
+                memcpy(&target[kBufferSizeStartIndex], &(test_new->size_), sizeof(test_new->size_));
+                memcpy(&target[kRemoteAddrStartIndex], &(test_new->buffer_), sizeof(test_new->buffer_));
+                memcpy(&target[kRkeyStartIndex], &(test_new->mr_->rkey), sizeof(test_new->mr_->rkey));
+
+                write(msgt, kMessageTotalBytes);
+            });
             break;
         }
         default:

@@ -9,9 +9,12 @@ PROG	: RDMA_ENDPOINT_H
 
 #include <map>
 
-#include "rdma_channel.h"
+#include "rdma_util.h"
+#include "rdma_message.h"
 
 class RDMA_Session;
+class RDMA_Channel;
+class RDMA_Buffer;
 
 class RDMA_Endpoint
 {
@@ -21,7 +24,6 @@ public:
 
     RDMA_Endpoint(RDMA_Session* session, int ib_port);
     ~RDMA_Endpoint();
-
 
     struct cm_con_data_t get_local_con_data();
     void connect(struct cm_con_data_t remote_con_data);

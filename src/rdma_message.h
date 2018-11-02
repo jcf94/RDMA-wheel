@@ -36,4 +36,14 @@ static const size_t kRemoteAddrStartIndex = kBufferSizeStartIndex + sizeof(Remot
 static const size_t kRkeyStartIndex = kRemoteAddrStartIndex + sizeof(Remote_info::remote_addr_);
 static const size_t kMessageTotalBytes = kRkeyStartIndex + sizeof(Remote_info::rkey_);
 
+class RDMA_Message
+{
+public:
+    RDMA_Message(Message_type msgt);
+    ~RDMA_Message();
+private:
+
+    Message_type msgt_;
+};
+
 #endif // !RDMA_MESSAGE_H
