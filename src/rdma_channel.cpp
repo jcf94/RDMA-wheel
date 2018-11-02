@@ -90,7 +90,7 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
     }
 }
 
-void RDMA_Channel::write(uint32_t imm_data, size_t size, uint64_t wr_id)
+void RDMA_Channel::write(uint32_t imm_data, size_t size)
 {
     struct ibv_sge list;
     list.addr = (uint64_t) outgoing_->buffer_; // Message
@@ -99,8 +99,7 @@ void RDMA_Channel::write(uint32_t imm_data, size_t size, uint64_t wr_id)
 
     struct ibv_send_wr wr;
     memset(&wr, 0, sizeof(wr));
-    if (wr_id == 0) wr.wr_id = (uint64_t) this; // Which RDMA_Channel send this message
-    else wr.wr_id = wr_id;
+    wr.wr_id = (uint64_t) this; // Which RDMA_Channel send this message
     wr.sg_list = &list;
     wr.num_sge = 1;
     wr.opcode = IBV_WR_RDMA_WRITE_WITH_IMM;
@@ -119,7 +118,7 @@ void RDMA_Channel::write(uint32_t imm_data, size_t size, uint64_t wr_id)
     }
 }
 
-void RDMA_Channel::send(uint32_t imm_data, size_t size, uint64_t wr_id)
+void RDMA_Channel::send(uint32_t imm_data, size_t size)
 {
     struct ibv_sge list;
     list.addr = (uint64_t) outgoing_->buffer_; // Message
@@ -128,8 +127,7 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size, uint64_t wr_id)
 
     struct ibv_send_wr wr;
     memset(&wr, 0, sizeof(wr));
-    if (wr_id == 0) wr.wr_id = (uint64_t) this; // Which RDMA_Channel send this message
-    else wr.wr_id = wr_id;
+    wr.wr_id = (uint64_t) this; // Which RDMA_Channel send this message
     wr.sg_list = &list;
     wr.num_sge = 1;
     wr.opcode = IBV_WR_SEND_WITH_IMM;

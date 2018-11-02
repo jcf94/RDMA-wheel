@@ -35,8 +35,8 @@ public:
     void send_message(Message_type msgt, uint64_t addr = 0);
 
 private:
-    void write(uint32_t imm_data, size_t size, uint64_t wr_id = 0);
-    void send(uint32_t imm_data, size_t size, uint64_t wr_id = 0);
+    void write(uint32_t imm_data, size_t size);
+    void send(uint32_t imm_data, size_t size);
 
     RDMA_Endpoint* endpoint_;
     ibv_pd* pd_;

@@ -32,14 +32,3 @@ std::string get_message(Message_type msgt)
             return "UNKNOWN MESSAGE";
     }
 }
-
-RDMA_Message::RDMA_Message(Message_type msgt)
-    : msgt_(msgt)
-{
-
-}
-
-RDMA_Message::~RDMA_Message()
-{
-
-}
