@@ -44,6 +44,7 @@ enum Channel_status
 };
 
 class RDMA_Endpoint;
+class RDMA_Buffer;
 
 class RDMA_Channel
 {

@@ -10,6 +10,7 @@ PROG	: RDMA_SESSION_CPP
 #include <map>
 
 #include "rdma_session.h"
+#include "rdma_channel.h"
 #include "rdma_endpoint.h"
 #include "rdma_pre.h"
 

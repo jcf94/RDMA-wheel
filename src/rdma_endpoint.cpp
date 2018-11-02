@@ -7,6 +7,7 @@ PROG	: RDMA_ENDPOINT_CPP
 #include <netdb.h>
 
 #include "rdma_endpoint.h"
+#include "rdma_channel.h"
 #include "rdma_session.h"
 
 RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
