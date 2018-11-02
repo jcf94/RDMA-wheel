@@ -124,7 +124,7 @@ void RDMA_Endpoint::connect(cm_con_data_t remote_con_data)
 
 void RDMA_Endpoint::send_message(Message_type msgt)
 {
-    channel_->send(msgt);
+    channel_->send_message(msgt);
 }
 
 void RDMA_Endpoint::recv()

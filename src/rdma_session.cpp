@@ -170,12 +170,19 @@ void RDMA_Session::stop_process()
     process_thread_->join();
 }
 
+enum Session_status
+{
+    WORK,
+    CLOSING,
+    CLOSED
+};
+
 void RDMA_Session::session_processCQ()
 {
     std::map<uint64_t, uint64_t> map_table;
 
-    int doit = 0;
-    while (doit == 0 || doit == 1)
+    Session_status doit = WORK;
+    while (doit == WORK || doit == CLOSING)
     {
         ibv_cq* cq;
         void* cq_context;
@@ -215,7 +222,7 @@ void RDMA_Session::session_processCQ()
             }
             switch(wc_[i].opcode)
             {
-                case IBV_WC_RECV_RDMA_WITH_IMM: // Recv Remote RDMA Message
+                case IBV_WC_RECV_RDMA_WITH_IMM: // Recv Remote RDMA Write Message
                 {
                     // Which RDMA_Endpoint get this message
                     RDMA_Endpoint* endpoint = reinterpret_cast<RDMA_Endpoint*>(wc_[i].wr_id);
@@ -226,9 +233,6 @@ void RDMA_Session::session_processCQ()
                     log_info(make_string("Message Recv: %s", get_message(msgt).data()));
                     switch(msgt)
                     {
-                        case RDMA_MESSAGE_ACK:
-                            endpoint->channel_->remote_status_ = IDLE;
-                            break;
                         case RDMA_MESSAGE_BUFFER_UNLOCK:
                         {
                             char* temp = (char*)endpoint->channel_->incoming_->buffer_;
@@ -241,7 +245,6 @@ void RDMA_Session::session_processCQ()
 
                             break;
                         }
-                        case RDMA_MESSAGE_WRITE_REQUEST:
                         case RDMA_MESSAGE_READ_REQUEST:
                         {
                             char* temp = (char*)endpoint->channel_->incoming_->buffer_;
@@ -262,25 +265,53 @@ void RDMA_Session::session_processCQ()
                             // RDMA_READ
                             break;
                         }
-                        case RDMA_MESSAGE_CLOSE:
-                            endpoint->send_message(RDMA_MESSAGE_TERMINATE);
-                            doit = 1;
-                            break;
-                        case RDMA_MESSAGE_TERMINATE:
-                            doit = -1;
-                            break;
                         default:
-                            ;
+                            log_error("Unsupported Message Type");
                     }
                     break;
                 }
-                case IBV_WC_RDMA_WRITE: // Successfully Send RDMA Message or Data
+                case IBV_WC_RECV: // Recv Remote RDMA Send Message
+                {
+                    // Which RDMA_Endpoint get this message
+                    RDMA_Endpoint* endpoint = reinterpret_cast<RDMA_Endpoint*>(wc_[i].wr_id);
+                    // Consumed a ibv_post_recv, so add one
+                    endpoint->recv();
+
+                    Message_type msgt = (Message_type)wc_[i].imm_data;
+                    log_info(make_string("Message Recv: %s", get_message(msgt).data()));
+                    switch(msgt)
+                    {
+                        case RDMA_MESSAGE_ACK:
+                            endpoint->channel_->remote_status_ = IDLE;
+                            break;
+                        case RDMA_MESSAGE_CLOSE:
+                            endpoint->send_message(RDMA_MESSAGE_TERMINATE);
+                            doit = CLOSING;
+                            break;
+                        case RDMA_MESSAGE_TERMINATE:
+                            doit = CLOSED;
+                            break;
+                        default:
+                            log_error("Unsupported Message Type");
+                    }
+
+                    break;
+                }
+                case IBV_WC_RDMA_WRITE: // Successfully Write RDMA Message or Data
                 {
                     // Which RDMA_Channel send this message/data
                     RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
                     // Message sent success, unlock the channel outgoing
                     channel->local_status_ = IDLE;
-                    log_info(make_string("Message Sent Success"));
+                    log_info(make_string("Message Write Success"));
+
+                    break;
+                }
+                case IBV_WC_SEND: // Successfully Send RDMA Message
+                {
+                    // Which RDMA_Channel send this message/data
+                    RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
+                    log_info(make_string("Message Send Success"));
 
                     break;
                 }
@@ -291,7 +322,7 @@ void RDMA_Session::session_processCQ()
                     log_ok(make_string("RDMA Read: %s", temp));
 
                     uint64_t res = rb->endpoint_->find_in_table((uint64_t)rb);
-                    rb->endpoint_->channel_->send(RDMA_MESSAGE_BUFFER_UNLOCK, res);
+                    rb->endpoint_->channel_->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
 
                     delete rb;
 

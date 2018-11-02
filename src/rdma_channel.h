@@ -30,11 +30,12 @@ public:
     RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp);
     ~RDMA_Channel();
 
-    void send(Message_type msgt, uint64_t addr = 0);
-    void write(uint32_t imm_data, size_t size, uint64_t wr_id = 0);
+    void send_message(Message_type msgt, uint64_t addr = 0);
 
 private:
     void ParseMessage(Message_type& rm, void* buffer);
+    void write(uint32_t imm_data, size_t size, uint64_t wr_id = 0);
+    void send(uint32_t imm_data, size_t size, uint64_t wr_id = 0);
 
     RDMA_Endpoint* endpoint_;
     ibv_pd* pd_;
