@@ -16,6 +16,8 @@ enum Buffer_status
     LOCK
 };
 
+class RDMA_Endpoint;
+
 class RDMA_Buffer
 {
 public:
@@ -24,10 +26,12 @@ public:
     friend class RDMA_Channel;
     friend class RDMA_Session;
 
-    RDMA_Buffer(ibv_pd* pd, int size);
+    RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size);
     ~RDMA_Buffer();
 
 private:
+
+    RDMA_Endpoint* endpoint_;
 
     void* buffer_ = NULL;
     uint64_t size_;

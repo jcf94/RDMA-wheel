@@ -53,7 +53,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
     // // ACK Buffer ......
     // incoming_abuffer_ = new RDMA_Buffer(this, SIZE);
     // outgoing_abuffer_ = new RDMA_Buffer(this, SIZE);
-    channel_ = new RDMA_Channel(session_->pd_, qp_);
+    channel_ = new RDMA_Channel(this, session_->pd_, qp_);
 
     // post recv
     for (int i=0;i<100;i++)
@@ -247,3 +247,12 @@ int RDMA_Endpoint::modify_qp_to_rts()
     return 0;
 }
 
+uint64_t RDMA_Endpoint::find_in_table(uint64_t key)
+{
+    auto temp = map_table.find(key);
+    if (temp == map_table.end())
+    {
+        log_error("Request key not found in map_table");
+        return 0;
+    } else return temp->second;
+}
