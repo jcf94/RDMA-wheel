@@ -50,6 +50,7 @@ int main(int argc, char* argv[])
             endpoint->send_data((void*)a, sizeof(a));
 
             char b[] = "Test Test Test Test Test Test Test Test Test";
+            for (int i=0;i<5;i++)
             endpoint->send_data((void*)b, sizeof(b));
 
             std::this_thread::sleep_for(std::chrono::seconds(2));

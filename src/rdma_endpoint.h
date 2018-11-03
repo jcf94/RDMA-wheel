@@ -51,7 +51,7 @@ private:
     // Message channel
     RDMA_Channel* channel_;
 
-    std::map<uint64_t, uint64_t> map_table_;
+    std::multimap<uint64_t, uint64_t> map_table_;
 };
 
 #endif // !RDMA_ENDPOINT_H

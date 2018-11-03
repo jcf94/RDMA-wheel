@@ -274,6 +274,7 @@ uint64_t RDMA_Endpoint::find_in_table(uint64_t key, bool erase)
         return 0;
     } else
     {
+        //log_warning(make_string("Find %p %p", temp->first, temp->second));
         uint64_t res = temp->second;
         // Erase is important, if two RDMA_Buffer has same address
         // the table find result will be a out of date value
@@ -284,5 +285,6 @@ uint64_t RDMA_Endpoint::find_in_table(uint64_t key, bool erase)
 
 void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)
 {
+    //log_warning(make_string("Insert %p %p", key, value));
     map_table_.insert(std::pair<uint64_t, uint64_t>(key, value));
 }

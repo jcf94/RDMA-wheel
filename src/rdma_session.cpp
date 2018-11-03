@@ -170,15 +170,15 @@ void RDMA_Session::stop_process()
     process_thread_->join();
 }
 
-enum Session_status
-{
-    WORK,
-    CLOSING,
-    CLOSED
-};
-
 void RDMA_Session::session_processCQ()
 {
+    enum Session_status
+    {
+        WORK,
+        CLOSING,
+        CLOSED
+    };
+
     Session_status status = WORK;
     while (status == WORK || status == CLOSING)
     {
