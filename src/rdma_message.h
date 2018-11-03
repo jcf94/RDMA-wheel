@@ -37,5 +37,6 @@ static const size_t kMessageTotalBytes = kRkeyStartIndex + sizeof(Message_Conten
 std::string get_message(Message_type msgt);
 
 void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr);
+Message_Content parse_message_content(char* content);
 
 #endif // !RDMA_MESSAGE_H

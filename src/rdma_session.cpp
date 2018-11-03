@@ -234,9 +234,7 @@ void RDMA_Session::session_processCQ()
                     {
                         case RDMA_MESSAGE_BUFFER_UNLOCK:
                         {
-                            char* temp = (char*)endpoint->channel_->incoming_->buffer();
-                            Message_Content msg;
-                            memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
+                            Message_Content msg = parse_message_content((char*)endpoint->channel_->incoming_->buffer());
                             endpoint->channel_->send_message(RDMA_MESSAGE_ACK);
 
                             RDMA_Buffer* buf = (RDMA_Buffer*)endpoint->find_in_table((uint64_t)msg.remote_addr_);
@@ -246,11 +244,7 @@ void RDMA_Session::session_processCQ()
                         }
                         case RDMA_MESSAGE_READ_REQUEST:
                         {
-                            char* temp = (char*)endpoint->channel_->incoming_->buffer();
-                            Message_Content msg;
-                            memcpy(&(msg.buffer_size_), &temp[kBufferSizeStartIndex], 8);
-                            memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
-                            memcpy(&(msg.rkey_), &temp[kRkeyStartIndex], 4);
+                            Message_Content msg = parse_message_content((char*)endpoint->channel_->incoming_->buffer());
                             endpoint->channel_->send_message(RDMA_MESSAGE_ACK);
 
                             RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, pd_, msg.buffer_size_);
@@ -260,7 +254,6 @@ void RDMA_Session::session_processCQ()
 
                             endpoint->read_data(test_new, msg);
 
-                            // RDMA_READ
                             break;
                         }
                         default:

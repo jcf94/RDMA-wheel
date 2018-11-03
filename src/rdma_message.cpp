@@ -39,3 +39,14 @@ void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr)
     memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
     if (mr) memcpy(&target[kRkeyStartIndex], &(mr->rkey), sizeof(mr->rkey));
 }
+
+Message_Content parse_message_content(char* content)
+{
+    Message_Content msg;
+
+    memcpy(&(msg.buffer_size_), &content[kBufferSizeStartIndex], 8);
+    memcpy(&(msg.remote_addr_), &content[kRemoteAddrStartIndex], 8);
+    memcpy(&(msg.rkey_), &content[kRkeyStartIndex], 4);
+
+    return msg;
+}
