@@ -7,7 +7,7 @@ PROG   : RDMA_MESSAGE_H
 #ifndef RDMA_MESSAGE_H
 #define RDMA_MESSAGE_H
 
-#include <string>
+#include "rdma_util.h"
 
 enum Message_type
 {
@@ -19,9 +19,7 @@ enum Message_type
     RDMA_MESSAGE_TERMINATE
 };
 
-std::string get_message(Message_type msgt);
-
-struct Remote_info
+struct Message_Content
 {
     uint64_t buffer_size_;
     uint64_t remote_addr_;
@@ -32,8 +30,12 @@ struct Remote_info
 };
 
 static const size_t kBufferSizeStartIndex = 0;
-static const size_t kRemoteAddrStartIndex = kBufferSizeStartIndex + sizeof(Remote_info::buffer_size_);
-static const size_t kRkeyStartIndex = kRemoteAddrStartIndex + sizeof(Remote_info::remote_addr_);
-static const size_t kMessageTotalBytes = kRkeyStartIndex + sizeof(Remote_info::rkey_);
+static const size_t kRemoteAddrStartIndex = kBufferSizeStartIndex + sizeof(Message_Content::buffer_size_);
+static const size_t kRkeyStartIndex = kRemoteAddrStartIndex + sizeof(Message_Content::remote_addr_);
+static const size_t kMessageTotalBytes = kRkeyStartIndex + sizeof(Message_Content::rkey_);
+
+std::string get_message(Message_type msgt);
+
+void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr);
 
 #endif // !RDMA_MESSAGE_H

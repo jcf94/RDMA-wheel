@@ -81,8 +81,8 @@ cm_con_data_t RDMA_Endpoint::get_local_con_data()
 {
     cm_con_data_t local_con_data;
     // exchange using TCP sockets info required to connect QPs
-    local_con_data.maddr = htonll((uintptr_t)channel_->incoming_->buffer_);
-    local_con_data.mrkey = htonl(channel_->incoming_->mr_->rkey);
+    local_con_data.maddr = htonll((uintptr_t)channel_->incoming_->buffer());
+    local_con_data.mrkey = htonl(channel_->incoming_->mr()->rkey);
     local_con_data.qpn = htonl(self_.qpn);
     local_con_data.lid = htonl(self_.lid);
     local_con_data.psn = htonl(self_.psn);
@@ -153,12 +153,12 @@ void RDMA_Endpoint::recv()
     }
 }
 
-void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Remote_info msg)
+void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Message_Content msg)
 {
     struct ibv_sge list;
-    list.addr = (uint64_t) buffer->buffer_;
+    list.addr = (uint64_t) buffer->buffer();
     list.length = msg.buffer_size_;
-    list.lkey = buffer->mr_->lkey;
+    list.lkey = buffer->mr()->lkey;
 
     struct ibv_send_wr wr;
     memset(&wr, 0, sizeof(wr));
@@ -265,7 +265,7 @@ int RDMA_Endpoint::modify_qp_to_rts()
     return 0;
 }
 
-uint64_t RDMA_Endpoint::find_in_table(uint64_t key)
+uint64_t RDMA_Endpoint::find_in_table(uint64_t key, bool erase)
 {
     auto temp = map_table_.find(key);
     if (temp == map_table_.end())
@@ -277,7 +277,7 @@ uint64_t RDMA_Endpoint::find_in_table(uint64_t key)
         uint64_t res = temp->second;
         // Erase is important, if two RDMA_Buffer has same address
         // the table find result will be a out of date value
-        map_table_.erase(temp);
+        if (erase) map_table_.erase(temp);
         return res;
     }
 }

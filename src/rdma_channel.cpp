@@ -50,9 +50,7 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
                     remote_status_ = LOCK;
                 }
 
-                char* target = (char*)outgoing_->buffer_;
-                memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
-
+                fill_message_content((char*)outgoing_->buffer(), (void*)addr, kMessageTotalBytes, NULL);
                 write(msgt, kMessageTotalBytes);
             });
             break;
@@ -74,14 +72,9 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
             remote_status_ = LOCK;
         }
 
-        char* target = (char*)outgoing_->buffer_;
+        endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
 
-        endpoint_->insert_to_table((uint64_t)buffer->buffer_, (uint64_t)buffer);
-
-        memcpy(&target[kBufferSizeStartIndex], &(buffer->size_), sizeof(buffer->size_));
-        memcpy(&target[kRemoteAddrStartIndex], &(buffer->buffer_), sizeof(buffer->buffer_));
-        memcpy(&target[kRkeyStartIndex], &(buffer->mr_->rkey), sizeof(buffer->mr_->rkey));
-
+        fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
         write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
     });
 }
@@ -89,9 +82,9 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 void RDMA_Channel::write(uint32_t imm_data, size_t size)
 {
     struct ibv_sge list;
-    list.addr = (uint64_t) outgoing_->buffer_; // Message
+    list.addr = (uint64_t) outgoing_->buffer(); // Message
     list.length = size; // Message size
-    list.lkey = outgoing_->mr_->lkey;
+    list.lkey = outgoing_->mr()->lkey;
 
     struct ibv_send_wr wr;
     memset(&wr, 0, sizeof(wr));
@@ -117,9 +110,9 @@ void RDMA_Channel::write(uint32_t imm_data, size_t size)
 void RDMA_Channel::send(uint32_t imm_data, size_t size)
 {
     struct ibv_sge list;
-    list.addr = (uint64_t) outgoing_->buffer_; // Message
+    list.addr = (uint64_t) outgoing_->buffer(); // Message
     list.length = size; // Message size
-    list.lkey = outgoing_->mr_->lkey;
+    list.lkey = outgoing_->mr()->lkey;
 
     struct ibv_send_wr wr;
     memset(&wr, 0, sizeof(wr));

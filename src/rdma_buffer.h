@@ -14,13 +14,16 @@ class RDMA_Endpoint;
 class RDMA_Buffer
 {
 public:
-    friend class RDMA_Endpoint;
-    friend class RDMA_Channel;
-    friend class RDMA_Session;
 
     RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size);
     RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size, void* addr);
     ~RDMA_Buffer();
+
+    // Private To Public
+    RDMA_Endpoint* endpoint();
+    void* buffer();
+    uint64_t size();
+    ibv_mr* mr();
 
 private:
 

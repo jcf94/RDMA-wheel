@@ -44,3 +44,23 @@ RDMA_Buffer::~RDMA_Buffer()
 
     log_info("RDMA_Buffer Deleted");
 }
+
+RDMA_Endpoint* RDMA_Buffer::endpoint()
+{
+    return endpoint_;
+}
+
+uint64_t RDMA_Buffer::size()
+{
+    return size_;
+}
+
+void* RDMA_Buffer::buffer()
+{
+    return buffer_;
+}
+
+ibv_mr* RDMA_Buffer::mr()
+{
+    return mr_;
+}

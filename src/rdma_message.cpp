@@ -32,3 +32,10 @@ std::string get_message(Message_type msgt)
             return "UNKNOWN MESSAGE";
     }
 }
+
+void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr)
+{
+    memcpy(&target[kBufferSizeStartIndex], &(size), sizeof(size));
+    memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
+    if (mr) memcpy(&target[kRkeyStartIndex], &(mr->rkey), sizeof(mr->rkey));
+}

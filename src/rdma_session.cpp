@@ -234,8 +234,8 @@ void RDMA_Session::session_processCQ()
                     {
                         case RDMA_MESSAGE_BUFFER_UNLOCK:
                         {
-                            char* temp = (char*)endpoint->channel_->incoming_->buffer_;
-                            Remote_info msg;
+                            char* temp = (char*)endpoint->channel_->incoming_->buffer();
+                            Message_Content msg;
                             memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
                             endpoint->channel_->send_message(RDMA_MESSAGE_ACK);
 
@@ -246,8 +246,8 @@ void RDMA_Session::session_processCQ()
                         }
                         case RDMA_MESSAGE_READ_REQUEST:
                         {
-                            char* temp = (char*)endpoint->channel_->incoming_->buffer_;
-                            Remote_info msg;
+                            char* temp = (char*)endpoint->channel_->incoming_->buffer();
+                            Message_Content msg;
                             memcpy(&(msg.buffer_size_), &temp[kBufferSizeStartIndex], 8);
                             memcpy(&(msg.remote_addr_), &temp[kRemoteAddrStartIndex], 8);
                             memcpy(&(msg.rkey_), &temp[kRkeyStartIndex], 4);
@@ -330,12 +330,11 @@ void RDMA_Session::session_processCQ()
                 case IBV_WC_RDMA_READ:  // Successfully Read RDMA Data
                 {
                     RDMA_Buffer* rb = reinterpret_cast<RDMA_Buffer*>(wc_[i].wr_id);
-                    char* temp = (char*)rb->buffer_;
+                    char* temp = (char*)rb->buffer();
                     log_ok(make_string("RDMA Read: %s", temp));
 
-                    uint64_t res = rb->endpoint_->find_in_table((uint64_t)rb);
-                    //log_error(res);
-                    rb->endpoint_->channel_->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
+                    uint64_t res = rb->endpoint()->find_in_table((uint64_t)rb);
+                    rb->endpoint()->channel_->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
 
                     delete rb;
 
