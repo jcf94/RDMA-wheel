@@ -7,6 +7,7 @@ PROG	: RDMA_ENDPOINT_CPP
 #include <netdb.h>
 
 #include "rdma_endpoint.h"
+#include "rdma_buffer.h"
 #include "rdma_channel.h"
 #include "rdma_session.h"
 
@@ -19,18 +20,18 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
 
     qp_init_attr.qp_type    = IBV_QPT_RC;
     // qp_init_attr.sq_sig_all = 1;
-    qp_init_attr.send_cq    = session_->cq_;
-    qp_init_attr.recv_cq    = session_->cq_;
+    qp_init_attr.send_cq    = session_->cq();
+    qp_init_attr.recv_cq    = session_->cq();
     qp_init_attr.cap.max_send_wr  = RDMA_Session::CQ_SIZE;
     qp_init_attr.cap.max_recv_wr  = RDMA_Session::CQ_SIZE;
     qp_init_attr.cap.max_send_sge = 1;
     qp_init_attr.cap.max_recv_sge = 1;
     
-    qp_ = ibv_create_qp(session_->pd_, &qp_init_attr);
+    qp_ = ibv_create_qp(session_->pd(), &qp_init_attr);
     if (!qp_)
     {
         log_error("failed to create QP");
-        // return 1;
+        return;
     }
     
     log_info(make_string("QP was created, QP number=0x%x", qp_->qp_num));
@@ -39,9 +40,10 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
 
     // Local address
     struct ibv_port_attr attr;
-    if (ibv_query_port(session_->context_, ib_port_, &attr))
+    if (ibv_query_port(session_->context(), ib_port_, &attr))
     {
         log_error(make_string("ibv_query_port on port %u failed", ib_port_));
+        return;
     }
     self_.lid = attr.lid;
     self_.qpn = qp_->qp_num;
@@ -54,7 +56,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
     // // ACK Buffer ......
     // incoming_abuffer_ = new RDMA_Buffer(this, SIZE);
     // outgoing_abuffer_ = new RDMA_Buffer(this, SIZE);
-    channel_ = new RDMA_Channel(this, session_->pd_, qp_);
+    channel_ = new RDMA_Channel(this, session_->pd(), qp_);
 
     // post recv
     for (int i=0;i<100;i++)
@@ -81,8 +83,8 @@ cm_con_data_t RDMA_Endpoint::get_local_con_data()
 {
     cm_con_data_t local_con_data;
     // exchange using TCP sockets info required to connect QPs
-    local_con_data.maddr = htonll((uintptr_t)channel_->incoming_->buffer());
-    local_con_data.mrkey = htonl(channel_->incoming_->mr()->rkey);
+    local_con_data.maddr = htonll((uintptr_t)channel_->incoming()->buffer());
+    local_con_data.mrkey = htonl(channel_->incoming()->mr()->rkey);
     local_con_data.qpn = htonl(self_.qpn);
     local_con_data.lid = htonl(self_.lid);
     local_con_data.psn = htonl(self_.psn);
@@ -287,4 +289,9 @@ void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)
 {
     //log_warning(make_string("Insert %p %p", key, value));
     map_table_.insert(std::pair<uint64_t, uint64_t>(key, value));
+}
+
+RDMA_Channel* RDMA_Endpoint::channel()
+{
+    return channel_;
 }

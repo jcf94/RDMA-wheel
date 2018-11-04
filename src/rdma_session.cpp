@@ -10,6 +10,7 @@ PROG	: RDMA_SESSION_CPP
 #include <map>
 
 #include "rdma_session.h"
+#include "rdma_buffer.h"
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 #include "rdma_pre.h"
@@ -234,8 +235,8 @@ void RDMA_Session::session_processCQ()
                     {
                         case RDMA_MESSAGE_BUFFER_UNLOCK:
                         {
-                            Message_Content msg = parse_message_content((char*)endpoint->channel_->incoming_->buffer());
-                            endpoint->channel_->send_message(RDMA_MESSAGE_ACK);
+                            Message_Content msg = parse_message_content((char*)endpoint->channel()->incoming()->buffer());
+                            endpoint->channel()->send_message(RDMA_MESSAGE_ACK);
 
                             RDMA_Buffer* buf = (RDMA_Buffer*)endpoint->find_in_table((uint64_t)msg.remote_addr_);
                             delete buf;
@@ -244,8 +245,8 @@ void RDMA_Session::session_processCQ()
                         }
                         case RDMA_MESSAGE_READ_REQUEST:
                         {
-                            Message_Content msg = parse_message_content((char*)endpoint->channel_->incoming_->buffer());
-                            endpoint->channel_->send_message(RDMA_MESSAGE_ACK);
+                            Message_Content msg = parse_message_content((char*)endpoint->channel()->incoming()->buffer());
+                            endpoint->channel()->send_message(RDMA_MESSAGE_ACK);
 
                             RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, pd_, msg.buffer_size_);
 
@@ -274,18 +275,16 @@ void RDMA_Session::session_processCQ()
                     {
                         case RDMA_MESSAGE_ACK:
                         {
-                            RDMA_Channel* channel = endpoint->channel_;
+                            RDMA_Channel* channel = endpoint->channel();
 
                             std::thread* work_thread = new std::thread([channel](){
-                                std::lock_guard<std::mutex> lock(channel->channel_cv_mutex_);
-                                channel->remote_status_ = IDLE;
-                                channel->channel_cv_.notify_one();
+                                channel->channel_release_remote();
                             });
 
                             break;
                         }
                         case RDMA_MESSAGE_CLOSE:
-                            endpoint->channel_->send_message(RDMA_MESSAGE_TERMINATE);
+                            endpoint->channel()->send_message(RDMA_MESSAGE_TERMINATE);
                             status = CLOSING;
                             break;
                         case RDMA_MESSAGE_TERMINATE:
@@ -305,9 +304,7 @@ void RDMA_Session::session_processCQ()
                     log_info(make_string("Message Write Success"));
 
                     std::thread* work_thread = new std::thread([channel](){
-                        std::lock_guard<std::mutex> lock(channel->channel_cv_mutex_);
-                        channel->local_status_ = IDLE;
-                        channel->channel_cv_.notify_one();
+                        channel->channel_release_local();
                     });
 
                     break;
@@ -327,7 +324,7 @@ void RDMA_Session::session_processCQ()
                     log_ok(make_string("RDMA Read: %s", temp));
 
                     uint64_t res = rb->endpoint()->find_in_table((uint64_t)rb);
-                    rb->endpoint()->channel_->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
+                    rb->endpoint()->channel()->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
 
                     delete rb;
 
@@ -345,4 +342,14 @@ void RDMA_Session::session_processCQ()
 ibv_pd* RDMA_Session::pd()
 {
     return pd_;
+}
+
+ibv_cq* RDMA_Session::cq()
+{
+    return cq_;
+}
+
+ibv_context* RDMA_Session::context()
+{
+    return context_;
 }

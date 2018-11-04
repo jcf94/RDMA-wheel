@@ -15,9 +15,6 @@ class RDMA_Pre;
 class RDMA_Session
 {
 public:
-
-    friend class RDMA_Endpoint;
-
     RDMA_Session(char* dev_name = NULL);
     ~RDMA_Session();
 
@@ -25,6 +22,8 @@ public:
     void stop_process();
 
     ibv_pd* pd();
+    ibv_cq* cq();
+    ibv_context* context();
 
     const static int CQ_SIZE = 1000;
 

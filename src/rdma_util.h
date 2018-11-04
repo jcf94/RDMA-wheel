@@ -110,12 +110,6 @@ struct RDMA_Address
     uint32_t psn;
 };
 
-struct Remote_MR
-{
-    uint64_t remote_addr;
-    uint32_t rkey;
-};
-
 // structure to exchange data which is needed to connect the QPs
 struct cm_con_data_t {
     uint64_t    maddr;      // Buffer address

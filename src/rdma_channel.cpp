@@ -6,6 +6,7 @@ PROG	: RDMA_CHANNEL_CPP
 
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
+#include "rdma_buffer.h"
 
 #include <thread>
 
@@ -42,13 +43,7 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
         {
             std::thread* work_thread = new std::thread([this, msgt, addr](){
 
-                {
-                    std::unique_lock<std::mutex> lock(channel_cv_mutex_);
-                    while (local_status_ == LOCK || remote_status_ == LOCK)
-                        channel_cv_.wait(lock);
-                    local_status_ = LOCK;
-                    remote_status_ = LOCK;
-                }
+                channel_lock();
 
                 fill_message_content((char*)outgoing_->buffer(), (void*)addr, kMessageTotalBytes, NULL);
                 write(msgt, kMessageTotalBytes);
@@ -64,13 +59,7 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
     std::thread* work_thread = new std::thread([this, buffer](){
 
-        {
-            std::unique_lock<std::mutex> lock(channel_cv_mutex_);
-            while (local_status_ == LOCK || remote_status_ == LOCK)
-                channel_cv_.wait(lock);
-            local_status_ = LOCK;
-            remote_status_ = LOCK;
-        }
+        channel_lock();
 
         endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
 
@@ -131,4 +120,37 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size)
     {
         log_info(make_string("Send Message post: %s", get_message((Message_type)imm_data).data()));
     }
+}
+
+void RDMA_Channel::channel_lock()
+{
+    std::unique_lock<std::mutex> lock(channel_cv_mutex_);
+    while (local_status_ == LOCK || remote_status_ == LOCK)
+        channel_cv_.wait(lock);
+    local_status_ = LOCK;
+    remote_status_ = LOCK;
+}
+
+void RDMA_Channel::channel_release_local()
+{
+    std::lock_guard<std::mutex> lock(channel_cv_mutex_);
+    local_status_ = IDLE;
+    channel_cv_.notify_one();
+}
+
+void RDMA_Channel::channel_release_remote()
+{
+    std::lock_guard<std::mutex> lock(channel_cv_mutex_);
+    remote_status_ = IDLE;
+    channel_cv_.notify_one();
+}
+
+RDMA_Buffer* RDMA_Channel::incoming()
+{
+    return incoming_;
+}
+
+RDMA_Buffer* RDMA_Channel::outgoing()
+{
+    return outgoing_;
 }

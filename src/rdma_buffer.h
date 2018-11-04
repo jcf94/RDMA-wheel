@@ -14,7 +14,6 @@ class RDMA_Endpoint;
 class RDMA_Buffer
 {
 public:
-
     RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size);
     RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size, void* addr);
     ~RDMA_Buffer();
@@ -26,7 +25,6 @@ public:
     ibv_mr* mr();
 
 private:
-
     bool buffer_owned_;
     RDMA_Endpoint* endpoint_;
 

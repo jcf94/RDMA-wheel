@@ -19,6 +19,12 @@ enum Message_type
     RDMA_MESSAGE_TERMINATE
 };
 
+struct Remote_MR
+{
+    uint64_t remote_addr;
+    uint32_t rkey;
+};
+
 struct Message_Content
 {
     uint64_t buffer_size_;
