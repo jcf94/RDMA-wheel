@@ -146,13 +146,3 @@ void RDMA_Channel::release_remote()
     remote_status_ = IDLE;
     channel_cv_.notify_one();
 }
-
-RDMA_Buffer* RDMA_Channel::incoming()
-{
-    return incoming_;
-}
-
-RDMA_Buffer* RDMA_Channel::outgoing()
-{
-    return outgoing_;
-}

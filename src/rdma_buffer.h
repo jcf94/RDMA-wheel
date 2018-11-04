@@ -19,10 +19,10 @@ public:
     ~RDMA_Buffer();
 
     // ----- Private To Public -----
-    RDMA_Endpoint* endpoint();
-    void* buffer();
-    uint64_t size();
-    ibv_mr* mr();
+    inline RDMA_Endpoint* endpoint() const {return endpoint_;}
+    inline void* buffer() const {return buffer_;}
+    inline uint64_t size() const {return size_;}
+    inline ibv_mr* mr() const {return mr_;}
 
 private:
     bool buffer_owned_;

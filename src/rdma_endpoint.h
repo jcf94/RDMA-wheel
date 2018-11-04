@@ -40,7 +40,7 @@ public:
     void insert_to_table(uint64_t key, uint64_t value);
 
     // ----- Private To Public -----
-    RDMA_Channel* channel();
+    inline RDMA_Channel* channel() const {return channel_;}
 
 private:
     int modify_qp_to_init();

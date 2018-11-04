@@ -35,8 +35,8 @@ public:
     void release_remote();
 
     // ----- Private To Public -----
-    RDMA_Buffer* incoming();
-    RDMA_Buffer* outgoing();
+    inline RDMA_Buffer* incoming() const {return incoming_;}
+    inline RDMA_Buffer* outgoing() const {return outgoing_;}
 
     Buffer_MR remote_mr_;
 

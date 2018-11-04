@@ -22,9 +22,9 @@ public:
     void stop_process();
 
     // ----- Private To Public -----
-    ibv_pd* pd();
-    ibv_cq* cq();
-    ibv_context* context();
+    inline ibv_pd* pd() const {return pd_;}
+    inline ibv_cq* cq() const {return cq_;}
+    inline ibv_context* context() const {return context_;}
 
     const static int CQ_SIZE = 1000;
 

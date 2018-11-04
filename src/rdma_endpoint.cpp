@@ -291,8 +291,3 @@ void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)
     //log_warning(make_string("Insert %p %p", key, value));
     map_table_.insert(std::pair<uint64_t, uint64_t>(key, value));
 }
-
-RDMA_Channel* RDMA_Endpoint::channel()
-{
-    return channel_;
-}

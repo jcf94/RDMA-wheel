@@ -336,18 +336,3 @@ void RDMA_Session::session_processCQ()
         }
     }
 }
-
-ibv_pd* RDMA_Session::pd()
-{
-    return pd_;
-}
-
-ibv_cq* RDMA_Session::cq()
-{
-    return cq_;
-}
-
-ibv_context* RDMA_Session::context()
-{
-    return context_;
-}

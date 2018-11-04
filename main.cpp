@@ -20,8 +20,6 @@ int main(int argc, char* argv[])
         log_error("xxx c\tto start the client");
     } else
     {
-        RDMA_Session session;
-
         TCP_Sock_Pre pre_tcp;
 
         // Connect
@@ -37,6 +35,7 @@ int main(int argc, char* argv[])
 
         pre_tcp.pre_connect();
 
+        RDMA_Session session;
         RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);
 
         if (strcmp(argv[1], "s") == 0)
