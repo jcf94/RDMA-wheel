@@ -48,6 +48,7 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
                 RDMA_Message::fill_message_content((char*)outgoing_->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
                 write(msgt, kRemoteAddrEndIndex);
             });
+            work_thread->detach();
             break;
         }
         default:
@@ -66,6 +67,7 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
         RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
         write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
     });
+    work_thread->detach();
 }
 
 void RDMA_Channel::write(uint32_t imm_data, size_t size)

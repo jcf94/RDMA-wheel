@@ -224,6 +224,7 @@ void RDMA_Session::session_processCQ()
                 case IBV_WC_RECV_RDMA_WITH_IMM: // Recv Remote RDMA Write Message
                 {
                     if (status != WORK) continue;
+
                     // Which RDMA_Endpoint get this message
                     RDMA_Endpoint* endpoint = reinterpret_cast<RDMA_Endpoint*>(wc_[i].wr_id);
                     // Consumed a ibv_post_recv, so add one
@@ -275,11 +276,8 @@ void RDMA_Session::session_processCQ()
                     {
                         case RDMA_MESSAGE_ACK:
                         {
-                            RDMA_Channel* channel = endpoint->channel();
-
-                            std::thread* work_thread = new std::thread([channel](){
-                                channel->channel_release_remote();
-                            });
+                            std::thread* work_thread = new std::thread(std::bind(&RDMA_Channel::channel_release_remote, endpoint->channel()));
+                            work_thread->detach();
 
                             break;
                         }
@@ -298,20 +296,20 @@ void RDMA_Session::session_processCQ()
                 }
                 case IBV_WC_RDMA_WRITE: // Successfully Write RDMA Message or Data
                 {
+                    
+                    log_info(make_string("Message Write Success"));
                     // Which RDMA_Channel send this message/data
                     RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
-                    // Message sent success, unlock the channel outgoing
-                    log_info(make_string("Message Write Success"));
 
-                    std::thread* work_thread = new std::thread([channel](){
-                        channel->channel_release_local();
-                    });
+                    // Message sent success, unlock the channel outgoing
+                    std::thread* work_thread = new std::thread(std::bind(&RDMA_Channel::channel_release_local, channel));
+                    work_thread->detach();
 
                     break;
                 }
                 case IBV_WC_SEND:       // Successfully Send RDMA Message
                 {
-                    // Which RDMA_Channel send this message/data
+                    // Which RDMA_Channel send this message
                     RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
                     log_info(make_string("Message Send Success"));
 
