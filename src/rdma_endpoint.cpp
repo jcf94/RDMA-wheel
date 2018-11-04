@@ -160,7 +160,7 @@ void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Message_Content msg)
 {
     struct ibv_sge list;
     list.addr = (uint64_t) buffer->buffer();
-    list.length = msg.buffer_size_;
+    list.length = msg.buffer_size;
     list.lkey = buffer->mr()->lkey;
 
     struct ibv_send_wr wr;
@@ -170,8 +170,8 @@ void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Message_Content msg)
     wr.num_sge = 1;
     wr.opcode = IBV_WR_RDMA_READ;
     wr.send_flags = IBV_SEND_SIGNALED;
-    wr.wr.rdma.remote_addr = (uint64_t) msg.remote_addr_;
-    wr.wr.rdma.rkey = msg.rkey_;
+    wr.wr.rdma.remote_addr = (uint64_t) msg.buffer_mr.remote_addr;
+    wr.wr.rdma.rkey = msg.buffer_mr.rkey;
 
     struct ibv_send_wr *bad_wr;
     if (ibv_post_send(qp_, &wr, &bad_wr))

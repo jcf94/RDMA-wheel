@@ -45,8 +45,8 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
 
                 channel_lock();
 
-                fill_message_content((char*)outgoing_->buffer(), (void*)addr, kMessageTotalBytes, NULL);
-                write(msgt, kMessageTotalBytes);
+                RDMA_Message::fill_message_content((char*)outgoing_->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
+                write(msgt, kRemoteAddrEndIndex);
             });
             break;
         }
@@ -63,7 +63,7 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 
         endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
 
-        fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
+        RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
         write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
     });
 }

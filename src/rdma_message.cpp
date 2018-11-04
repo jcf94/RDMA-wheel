@@ -6,7 +6,7 @@ PROG   : RDMA_MESSAGE_CPP
 
 #include "rdma_message.h"
 
-std::string get_message(Message_type msgt)
+std::string RDMA_Message::get_message(Message_type msgt)
 {
     switch(msgt)
     {
@@ -33,20 +33,20 @@ std::string get_message(Message_type msgt)
     }
 }
 
-void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr)
+void RDMA_Message::fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr)
 {
     memcpy(&target[kBufferSizeStartIndex], &(size), sizeof(size));
     memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
     if (mr) memcpy(&target[kRkeyStartIndex], &(mr->rkey), sizeof(mr->rkey));
 }
 
-Message_Content parse_message_content(char* content)
+Message_Content RDMA_Message::parse_message_content(char* content)
 {
     Message_Content msg;
 
-    memcpy(&(msg.buffer_size_), &content[kBufferSizeStartIndex], 8);
-    memcpy(&(msg.remote_addr_), &content[kRemoteAddrStartIndex], 8);
-    memcpy(&(msg.rkey_), &content[kRkeyStartIndex], 4);
+    memcpy(&(msg.buffer_size), &content[kBufferSizeStartIndex], 8);
+    memcpy(&(msg.buffer_mr.remote_addr), &content[kRemoteAddrStartIndex], 8);
+    memcpy(&(msg.buffer_mr.rkey), &content[kRkeyStartIndex], 4);
 
     return msg;
 }

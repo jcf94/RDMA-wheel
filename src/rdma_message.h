@@ -19,7 +19,7 @@ enum Message_type
     RDMA_MESSAGE_TERMINATE
 };
 
-struct Remote_MR
+struct Buffer_MR
 {
     uint64_t remote_addr;
     uint32_t rkey;
@@ -27,22 +27,29 @@ struct Remote_MR
 
 struct Message_Content
 {
-    uint64_t buffer_size_;
-    uint64_t remote_addr_;
-    uint32_t rkey_;
+    Buffer_MR buffer_mr;
+    uint64_t buffer_size;
 
-    // |buffer_size|remote_addr|rkey|
-    // |    8B     |     8B    | 4B |
+    // |remote_addr|rkey|buffer_size|
+    // |     8B    | 4B |     8B    |
 };
 
-static const size_t kBufferSizeStartIndex = 0;
-static const size_t kRemoteAddrStartIndex = kBufferSizeStartIndex + sizeof(Message_Content::buffer_size_);
-static const size_t kRkeyStartIndex = kRemoteAddrStartIndex + sizeof(Message_Content::remote_addr_);
-static const size_t kMessageTotalBytes = kRkeyStartIndex + sizeof(Message_Content::rkey_);
+static const size_t kRemoteAddrStartIndex = 0;
+static const size_t kRemoteAddrEndIndex = kRemoteAddrStartIndex + sizeof(Message_Content::buffer_mr.remote_addr);
+static const size_t kRkeyStartIndex = kRemoteAddrEndIndex;
+static const size_t kRkeyEndIndex = kRkeyStartIndex + sizeof(Message_Content::buffer_mr.rkey);
+static const size_t kBufferSizeStartIndex = kRkeyEndIndex;
+static const size_t kBufferSizeEndIndex = kBufferSizeStartIndex + sizeof(Message_Content::buffer_size);
+
+static const size_t kMessageTotalBytes = kBufferSizeEndIndex;
+
+namespace RDMA_Message {
 
 std::string get_message(Message_type msgt);
 
 void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr);
 Message_Content parse_message_content(char* content);
+
+};
 
 #endif // !RDMA_MESSAGE_H

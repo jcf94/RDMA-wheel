@@ -38,7 +38,7 @@ public:
     RDMA_Buffer* incoming();
     RDMA_Buffer* outgoing();
 
-    Remote_MR remote_mr_;
+    Buffer_MR remote_mr_;
 
 private:
     void write(uint32_t imm_data, size_t size);
