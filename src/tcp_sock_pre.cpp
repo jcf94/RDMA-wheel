@@ -11,6 +11,8 @@ PROG	: TCP_SOCK_PRE_CPP
 
 #include "tcp_sock_pre.h"
 #include "rdma_util.h"
+#include "rdma_session.h"
+#include "rdma_endpoint.h"
 
 TCP_Sock_Pre::TCP_Sock_Pre()
 {
@@ -19,6 +21,8 @@ TCP_Sock_Pre::TCP_Sock_Pre()
 
 TCP_Sock_Pre::~TCP_Sock_Pre()
 {
+    if (daemon_thread_) daemon_thread_->join();
+
     log_info("TCP_Sock_Pre Deleted");
 }
 
@@ -48,7 +52,7 @@ cm_con_data_t TCP_Sock_Pre::exchange_qp_data(cm_con_data_t local_con_data)
 /*****************************************
 * Function: tcp_sock_connect
 *****************************************/
-void TCP_Sock_Pre::pre_connect()
+RDMA_Endpoint* TCP_Sock_Pre::ptp_connect(RDMA_Session* session)
 {
     print_config();
 
@@ -58,7 +62,7 @@ void TCP_Sock_Pre::pre_connect()
         remote_sock_ = sock_client_connect(config.server_name, config.tcp_port);
         if (remote_sock_ < 0) {
             log_error(make_string("failed to establish TCP connection to server %s, port %d", config.server_name, config.tcp_port));
-            return;
+            return NULL;
         }
     } else
     // Server Side
@@ -67,10 +71,102 @@ void TCP_Sock_Pre::pre_connect()
         remote_sock_ = sock_server_connect(config.tcp_port);
         if (remote_sock_ < 0) {
             log_error(make_string("failed to establish TCP connection with client on port %d", config.tcp_port));
-            return;
+            return NULL;
         }
     }
     log_ok("TCP connection was established");
+
+    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(session, config.ib_port);
+    session->add_endpoint(new_endpoint);
+    new_endpoint->connect(exchange_qp_data(new_endpoint->get_local_con_data()));
+
+    return new_endpoint;
+}
+
+void TCP_Sock_Pre::daemon_connect(RDMA_Session* session)
+{
+    print_config();
+
+    if (config.server_name)
+    {
+        log_error("Daemon should be used in server side");
+        return;
+    }
+    log_ok(make_string("waiting on port %d for TCP connection", config.tcp_port));
+
+    // Use a new thread to do the CQ processing
+    daemon_thread_.reset(new std::thread(std::bind(&TCP_Sock_Pre::sock_daemon_connect, this, config.tcp_port, session)));
+}
+
+/*****************************************
+* Function: sock_daemon_connect
+*****************************************/
+int TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
+{
+    struct addrinfo *res, *t;
+    struct addrinfo hints = {
+        .ai_flags    = AI_PASSIVE,
+        .ai_family   = AF_UNSPEC,
+        .ai_socktype = SOCK_STREAM
+    };
+    char *service;
+    int n;
+    int sockfd = -1, connfd;
+
+    if (asprintf(&service, "%d", port) < 0) {
+        log_error("asprintf failed");
+        return -1;
+    }
+
+    n = getaddrinfo(NULL, service, &hints, &res);
+    if (n < 0) {
+        log_error(make_string("%s for port %d", gai_strerror(n), port));
+        free(service);
+        return -1;
+    }
+
+    for (t = res; t; t = t->ai_next) {
+        sockfd = socket(t->ai_family, t->ai_socktype, t->ai_protocol);
+        if (sockfd >= 0) {
+            n = 1;
+
+            setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof n);
+
+            if (!bind(sockfd, t->ai_addr, t->ai_addrlen))
+                break;
+            close(sockfd);
+            sockfd = -1;
+        }
+    }
+
+    freeaddrinfo(res);
+    free(service);
+
+    if (sockfd < 0) {
+        log_error(make_string("couldn't listen to port %d", port));
+        return -1;
+    }
+
+    listen(sockfd, 10);
+    while (1)
+    {
+        connfd = accept(sockfd, NULL, 0);
+        //close(sockfd);
+        if (connfd < 0) {
+            log_error("accept() failed");
+            return -1;
+        }
+
+        remote_sock_ = connfd;
+
+        RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(session, config.ib_port);
+        session->add_endpoint(new_endpoint);
+        new_endpoint->connect(exchange_qp_data(new_endpoint->get_local_con_data()));
+
+    }
+    close(sockfd);
+
+    return connfd;
 }
 
 /*****************************************

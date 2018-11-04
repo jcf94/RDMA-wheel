@@ -156,20 +156,14 @@ int RDMA_Session::open_ib_device()
     return 0;
 }
 
-RDMA_Endpoint* RDMA_Session::ptp_connect(RDMA_Pre* pre)
-{
-    pre->pre_connect();
-
-    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(this, pre->config.ib_port);
-    endpoint_list_.push_back(new_endpoint);
-    new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
-
-    return new_endpoint;
-}
-
 void RDMA_Session::stop_process()
 {
     process_thread_->join();
+}
+
+void RDMA_Session::add_endpoint(RDMA_Endpoint* endpoint)
+{
+    endpoint_list_.push_back(endpoint);
 }
 
 void RDMA_Session::session_processCQ()

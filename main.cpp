@@ -34,15 +34,20 @@ int main(int argc, char* argv[])
         }
 
         RDMA_Session session;
-        RDMA_Endpoint* endpoint = session.ptp_connect(&pre_tcp);
+        RDMA_Endpoint* endpoint = pre_tcp.ptp_connect(&session);
 
         if (strcmp(argv[1], "s") == 0)
         {
+            //pre_tcp.daemon_connect(&session);
+            //RDMA_Endpoint* endpoint = pre_tcp.ptp_connect(&session);
+
             char a[] = "Hello World from Server !!!!!";
             endpoint->send_data((void*)a, sizeof(a));
 
         } else if (strcmp(argv[1], "c") == 0)
         {
+            //RDMA_Endpoint* endpoint = pre_tcp.ptp_connect(&session);
+
             char a[] = "Hello World from Client !!!!!";
             endpoint->send_data((void*)a, sizeof(a));
 

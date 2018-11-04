@@ -18,8 +18,9 @@ public:
     RDMA_Session(char* dev_name = NULL);
     ~RDMA_Session();
 
-    RDMA_Endpoint* ptp_connect(RDMA_Pre* pre);
     void stop_process();
+
+    void add_endpoint(RDMA_Endpoint* endpoint);
 
     // ----- Private To Public -----
     inline ibv_pd* pd() const {return pd_;}
