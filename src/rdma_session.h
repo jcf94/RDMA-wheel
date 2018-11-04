@@ -18,7 +18,7 @@ public:
     RDMA_Session(char* dev_name = NULL);
     ~RDMA_Session();
 
-    RDMA_Endpoint* add_connection(RDMA_Pre* pre);
+    RDMA_Endpoint* ptp_connect(RDMA_Pre* pre);
     void stop_process();
 
     // ----- Private To Public -----

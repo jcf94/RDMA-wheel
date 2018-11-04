@@ -64,7 +64,7 @@ void TCP_Sock_Pre::pre_connect()
     // Server Side
     {
         log_ok(make_string("waiting on port %d for TCP connection", config.tcp_port));
-        remote_sock_ = sock_daemon_connect(config.tcp_port);
+        remote_sock_ = sock_server_connect(config.tcp_port);
         if (remote_sock_ < 0) {
             log_error(make_string("failed to establish TCP connection with client on port %d", config.tcp_port));
             return;
@@ -74,9 +74,9 @@ void TCP_Sock_Pre::pre_connect()
 }
 
 /*****************************************
-* Function: sock_daemon_connect
+* Function: sock_server_connect
 *****************************************/
-int TCP_Sock_Pre::sock_daemon_connect(int port)
+int TCP_Sock_Pre::sock_server_connect(int port)
 {
     struct addrinfo *res, *t;
     struct addrinfo hints = {

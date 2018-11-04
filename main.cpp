@@ -33,10 +33,8 @@ int main(int argc, char* argv[])
             else pre_tcp.config.server_name = argv[2];
         }
 
-        pre_tcp.pre_connect();
-
         RDMA_Session session;
-        RDMA_Endpoint* endpoint = session.add_connection(&pre_tcp);
+        RDMA_Endpoint* endpoint = session.ptp_connect(&pre_tcp);
 
         if (strcmp(argv[1], "s") == 0)
         {
