@@ -21,6 +21,7 @@ public:
     RDMA_Endpoint* add_connection(RDMA_Pre* pre);
     void stop_process();
 
+    // ----- Private To Public -----
     ibv_pd* pd();
     ibv_cq* cq();
     ibv_context* context();

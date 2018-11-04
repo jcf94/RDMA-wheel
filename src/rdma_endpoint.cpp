@@ -45,6 +45,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
         log_error(make_string("ibv_query_port on port %u failed", ib_port_));
         return;
     }
+
     self_.lid = attr.lid;
     self_.qpn = qp_->qp_num;
     self_.psn = static_cast<uint32_t>(New64()) & 0xffffff;

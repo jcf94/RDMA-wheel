@@ -34,6 +34,7 @@ public:
     void channel_release_local();
     void channel_release_remote();
 
+    // ----- Private To Public -----
     RDMA_Buffer* incoming();
     RDMA_Buffer* outgoing();
 

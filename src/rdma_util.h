@@ -103,12 +103,6 @@ static inline uint64_t ntohll(uint64_t x) { return x; }
 // ---- UTILS
 
 // ---- RDMA
-struct RDMA_Address
-{
-    uint32_t lid;
-    uint32_t qpn;
-    uint32_t psn;
-};
 
 // structure to exchange data which is needed to connect the QPs
 struct cm_con_data_t {

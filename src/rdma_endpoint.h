@@ -11,6 +11,13 @@ PROG	: RDMA_ENDPOINT_H
 
 #include "rdma_util.h"
 
+struct RDMA_Endpoint_Info
+{
+    uint32_t lid;
+    uint32_t qpn;
+    uint32_t psn;
+};
+
 class RDMA_Session;
 class RDMA_Channel;
 class RDMA_Buffer;
@@ -32,6 +39,7 @@ public:
     uint64_t find_in_table(uint64_t key, bool erase = true);
     void insert_to_table(uint64_t key, uint64_t value);
 
+    // ----- Private To Public -----
     RDMA_Channel* channel();
 
 private:
@@ -43,10 +51,10 @@ private:
     int ib_port_;
 
     RDMA_Session* session_;
-    // Queue Pair
+    // Queue pair
     ibv_qp* qp_;
-
-    RDMA_Address self_, remote_;
+    // Endpoint info used for exchange with remote
+    RDMA_Endpoint_Info self_, remote_;
     // Message channel
     RDMA_Channel* channel_;
 
