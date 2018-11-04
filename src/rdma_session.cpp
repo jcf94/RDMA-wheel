@@ -276,7 +276,7 @@ void RDMA_Session::session_processCQ()
                     {
                         case RDMA_MESSAGE_ACK:
                         {
-                            std::thread* work_thread = new std::thread(std::bind(&RDMA_Channel::channel_release_remote, endpoint->channel()));
+                            std::thread* work_thread = new std::thread(std::bind(&RDMA_Channel::release_remote, endpoint->channel()));
                             work_thread->detach();
 
                             break;
@@ -302,7 +302,7 @@ void RDMA_Session::session_processCQ()
                     RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
 
                     // Message sent success, unlock the channel outgoing
-                    std::thread* work_thread = new std::thread(std::bind(&RDMA_Channel::channel_release_local, channel));
+                    std::thread* work_thread = new std::thread(std::bind(&RDMA_Channel::release_local, channel));
                     work_thread->detach();
 
                     break;
