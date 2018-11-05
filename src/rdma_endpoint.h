@@ -59,6 +59,7 @@ private:
     RDMA_Channel* channel_;
 
     std::multimap<uint64_t, uint64_t> map_table_;
+    std::mutex map_lock_;
 };
 
 #endif // !RDMA_ENDPOINT_H

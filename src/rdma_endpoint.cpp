@@ -289,5 +289,6 @@ uint64_t RDMA_Endpoint::find_in_table(uint64_t key, bool erase)
 void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)
 {
     //log_warning(make_string("Insert %p %p", key, value));
+    std::lock_guard<std::mutex> lock(map_lock_);
     map_table_.insert(std::pair<uint64_t, uint64_t>(key, value));
 }
