@@ -19,8 +19,10 @@ public:
     ~RDMA_Session();
 
     void stop_process();
-
     void add_endpoint(RDMA_Endpoint* endpoint);
+
+    RDMA_Endpoint* ptp_connect(RDMA_Pre* pre);
+    void daemon_connect(RDMA_Pre* pre);
 
     // ----- Private To Public -----
     inline ibv_pd* pd() const {return pd_;}
@@ -42,6 +44,7 @@ private:
     ibv_comp_channel* event_channel_;
     // Completion queue, to poll on work completions
     ibv_cq* cq_;
+    RDMA_Pre* pre_ = NULL;
     // List of endpoints
     std::vector<RDMA_Endpoint*> endpoint_list_;
     // Thread used to process CQ

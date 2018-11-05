@@ -6,8 +6,10 @@ PROG	: TCP_SOCK_PRE_CPP
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/epoll.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "tcp_sock_pre.h"
 #include "rdma_util.h"
@@ -80,6 +82,8 @@ RDMA_Endpoint* TCP_Sock_Pre::ptp_connect(RDMA_Session* session)
     session->add_endpoint(new_endpoint);
     new_endpoint->connect(exchange_qp_data(new_endpoint->get_local_con_data()));
 
+    close(remote_sock_);
+
     return new_endpoint;
 }
 
@@ -92,7 +96,7 @@ void TCP_Sock_Pre::daemon_connect(RDMA_Session* session)
         log_error("Daemon should be used in server side");
         return;
     }
-    log_ok(make_string("waiting on port %d for TCP connection", config.tcp_port));
+    log_ok(make_string("Daemon waiting on port %d for TCP connection", config.tcp_port));
 
     // Use a new thread to do the CQ processing
     daemon_thread_.reset(new std::thread(std::bind(&TCP_Sock_Pre::sock_daemon_connect, this, config.tcp_port, session)));
@@ -101,7 +105,10 @@ void TCP_Sock_Pre::daemon_connect(RDMA_Session* session)
 /*****************************************
 * Function: sock_daemon_connect
 *****************************************/
-int TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
+
+#define MAX_EVENTS 10
+
+void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
 {
     struct addrinfo *res, *t;
     struct addrinfo hints = {
@@ -111,18 +118,19 @@ int TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
     };
     char *service;
     int n;
-    int sockfd = -1, connfd;
+    int sockfd = -1, connfd, epfd;
+    struct epoll_event ev, events[MAX_EVENTS];
 
     if (asprintf(&service, "%d", port) < 0) {
         log_error("asprintf failed");
-        return -1;
+        return;
     }
 
     n = getaddrinfo(NULL, service, &hints, &res);
     if (n < 0) {
         log_error(make_string("%s for port %d", gai_strerror(n), port));
         free(service);
-        return -1;
+        return;
     }
 
     for (t = res; t; t = t->ai_next) {
@@ -132,8 +140,18 @@ int TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
 
             setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof n);
 
-            if (!bind(sockfd, t->ai_addr, t->ai_addrlen))
-                break;
+            int opts = fcntl(sockfd, F_GETFL);
+            if (opts < 0)
+            {
+                log_error("Fcntl get error");
+            }
+            if (fcntl(sockfd, F_SETFL, opts | O_NONBLOCK) < 0)
+            {
+                log_error("Fcntl set error");
+                return;
+            }
+
+            if (!bind(sockfd, t->ai_addr, t->ai_addrlen)) break;
             close(sockfd);
             sockfd = -1;
         }
@@ -144,29 +162,71 @@ int TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
 
     if (sockfd < 0) {
         log_error(make_string("couldn't listen to port %d", port));
-        return -1;
+        return;
     }
 
     listen(sockfd, 10);
+
+    epfd = epoll_create(MAX_EVENTS);
+    if (epfd < 0)
+    {
+        log_error("Epoll create error");
+        return;
+    }
+
+    ev.events = EPOLLIN;
+    ev.data.fd = sockfd;
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev) == -1)
+    {
+        log_error("Epoll add error");
+        return;
+    }
+
+    listen_sock_ = sockfd;
+
+    run_ = true;
     while (1)
     {
-        connfd = accept(sockfd, NULL, 0);
-        //close(sockfd);
-        if (connfd < 0) {
-            log_error("accept() failed");
-            return -1;
+        int nfds = epoll_wait(epfd, events, MAX_EVENTS, -1);
+        if (!run_)
+        {
+            close(listen_sock_);
+            return;
         }
+        if (nfds == -1)
+        {
+            log_error("epoll_wait error");
+            return;
+        }
+        for (int i=0;i<nfds;i++)
+        {
+            int fd = events[i].data.fd;
+            if (fd == sockfd)
+            {
+                while ((connfd = accept(sockfd, NULL, 0)) > 0)
+                {
+                    remote_sock_ = connfd;
 
-        remote_sock_ = connfd;
+                    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(session, config.ib_port);
+                    session->add_endpoint(new_endpoint);
+                    new_endpoint->connect(exchange_qp_data(new_endpoint->get_local_con_data()));
 
-        RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(session, config.ib_port);
-        session->add_endpoint(new_endpoint);
-        new_endpoint->connect(exchange_qp_data(new_endpoint->get_local_con_data()));
-
+                    close(remote_sock_);
+                }
+            } else
+            {
+                log_error("Unknown epoll sock event get");
+                return;
+            }
+        }
     }
     close(sockfd);
+}
 
-    return connfd;
+void TCP_Sock_Pre::close_daemon()
+{
+    run_ = false;
+    write(listen_sock_, NULL, 0);
 }
 
 /*****************************************

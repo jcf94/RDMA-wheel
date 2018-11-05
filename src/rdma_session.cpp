@@ -166,6 +166,19 @@ void RDMA_Session::add_endpoint(RDMA_Endpoint* endpoint)
     endpoint_list_.push_back(endpoint);
 }
 
+RDMA_Endpoint* RDMA_Session::ptp_connect(RDMA_Pre* pre)
+{
+    pre->ptp_connect(this);
+}
+
+void RDMA_Session::daemon_connect(RDMA_Pre* pre)
+{
+    pre_ = pre;
+    pre->daemon_connect(this);
+}
+
+// -----------------------------------
+
 void RDMA_Session::session_processCQ()
 {
     enum Session_status
@@ -329,5 +342,10 @@ void RDMA_Session::session_processCQ()
                 }
             }
         }
+    }
+
+    if (pre_)
+    {
+        pre_->close_daemon();
     }
 }

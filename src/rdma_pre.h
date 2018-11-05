@@ -26,6 +26,7 @@ public:
 
     virtual RDMA_Endpoint* ptp_connect(RDMA_Session* session) = 0;
     virtual void daemon_connect(RDMA_Session* session) = 0;
+    virtual void close_daemon() = 0;
 
     config_t config = {
         ((char*)0),     // server_name
