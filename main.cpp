@@ -7,8 +7,6 @@ PROG	: RDMA_MAIN
 #include "src/rdma_session.h"
 #include "src/rdma_endpoint.h"
 #include "src/tcp_sock_pre.h"
-#include <chrono>
-#include <thread>
 
 int main(int argc, char* argv[])
 {
@@ -52,12 +50,18 @@ int main(int argc, char* argv[])
             endpoint->send_data((void*)a, sizeof(a));
 
             char b[] = "Test Test Test Test Test Test Test Test Test";
-            for (int i=0;i<5;i++)
-            endpoint->send_data((void*)b, sizeof(b));
 
-            std::this_thread::sleep_for(std::chrono::seconds(2));
-
-            endpoint->close();
+            while (1)
+            {
+                int com;
+                std::cin >> com;
+                if (com == 0) endpoint->send_data((void*)b, sizeof(b));
+                else
+                {
+                    endpoint->close();
+                    break;
+                }
+            }
         }
     }
 

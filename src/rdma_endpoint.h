@@ -42,12 +42,13 @@ public:
     // ----- Private To Public -----
     inline RDMA_Channel* channel() const {return channel_;}
 
+    bool connected_;
+
 private:
     int modify_qp_to_init();
     int modify_qp_to_rtr();
     int modify_qp_to_rts();
 
-    bool connected_;
     int ib_port_;
 
     RDMA_Session* session_;

@@ -161,20 +161,27 @@ void RDMA_Session::stop_process()
     process_thread_->join();
 }
 
-void RDMA_Session::add_endpoint(RDMA_Endpoint* endpoint)
+RDMA_Endpoint* RDMA_Session::new_endpoint(RDMA_Pre* pre)
 {
-    endpoint_list_.push_back(endpoint);
+    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(this, pre->config.ib_port);
+    endpoint_list_.push_back(new_endpoint);
+    new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
+
+    return new_endpoint;
 }
 
 RDMA_Endpoint* RDMA_Session::ptp_connect(RDMA_Pre* pre)
 {
-    pre->ptp_connect(this);
+    pre->ptp_connect();
+
+    return new_endpoint(pre);
 }
 
 void RDMA_Session::daemon_connect(RDMA_Pre* pre)
 {
     pre_ = pre;
-    pre->daemon_connect(this);
+    std::function<void()> func = std::bind(&RDMA_Session::new_endpoint, this, pre);
+    pre->daemon_connect(func);
 }
 
 // -----------------------------------
@@ -189,7 +196,7 @@ void RDMA_Session::session_processCQ()
     };
 
     Session_status status = WORK;
-    while (status == WORK || status == CLOSING)
+    while (status != CLOSED)
     {
         ibv_cq* cq;
         void* cq_context;
@@ -239,7 +246,7 @@ void RDMA_Session::session_processCQ()
                     endpoint->recv();
 
                     Message_type msgt = (Message_type)wc_[i].imm_data;
-                    log_info(make_string("Message Recv: %s", get_message(msgt).data()));
+                    log_info(make_string("Message Recv: %s", RDMA_Message::get_message(msgt).data()));
                     switch(msgt)
                     {
                         case RDMA_MESSAGE_BUFFER_UNLOCK:
@@ -279,7 +286,7 @@ void RDMA_Session::session_processCQ()
                     endpoint->recv();
 
                     Message_type msgt = (Message_type)wc_[i].imm_data;
-                    log_info(make_string("Message Recv: %s", get_message(msgt).data()));
+                    log_info(make_string("Message Recv: %s", RDMA_Message::get_message(msgt).data()));
                     switch(msgt)
                     {
                         case RDMA_MESSAGE_ACK:
@@ -290,11 +297,15 @@ void RDMA_Session::session_processCQ()
                             break;
                         }
                         case RDMA_MESSAGE_CLOSE:
-                            endpoint->channel()->send_message(RDMA_MESSAGE_TERMINATE);
+                        {
+                            for (auto endpoint: endpoint_list_)
+                                endpoint->channel()->send_message(RDMA_MESSAGE_TERMINATE);
                             status = CLOSING;
                             break;
+                        }
                         case RDMA_MESSAGE_TERMINATE:
                             status = CLOSED;
+                            endpoint->connected_ = false;
                             break;
                         default:
                             log_error("Unsupported Message Type");

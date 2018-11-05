@@ -15,18 +15,18 @@ struct config_t
     int ib_port;        /* local IB port to work with */
 };
 
-class RDMA_Session;
-class RDMA_Endpoint;
-
 class RDMA_Pre
 {
 public:
     RDMA_Pre() {}
     virtual ~RDMA_Pre() {}
 
-    virtual RDMA_Endpoint* ptp_connect(RDMA_Session* session) = 0;
-    virtual void daemon_connect(RDMA_Session* session) = 0;
+    virtual void ptp_connect() = 0;
+    // When new connection is estiblished, run connect_callback() to do RDMA init
+    virtual void daemon_connect(std::function<void()> connect_callback) = 0;
     virtual void close_daemon() = 0;
+    // Exchange QP info to establish the connection
+    virtual struct cm_con_data_t exchange_qp_data(struct cm_con_data_t local_con_data) = 0;
 
     config_t config = {
         ((char*)0),     // server_name

@@ -13,8 +13,6 @@ PROG	: TCP_SOCK_PRE_CPP
 
 #include "tcp_sock_pre.h"
 #include "rdma_util.h"
-#include "rdma_session.h"
-#include "rdma_endpoint.h"
 
 TCP_Sock_Pre::TCP_Sock_Pre()
 {
@@ -48,13 +46,15 @@ cm_con_data_t TCP_Sock_Pre::exchange_qp_data(cm_con_data_t local_con_data)
         log_error("failed to exchange connection data between sides");
     }
 
+    close(remote_sock_);
+
     return remote_con_data;
 }
 
 /*****************************************
 * Function: tcp_sock_connect
 *****************************************/
-RDMA_Endpoint* TCP_Sock_Pre::ptp_connect(RDMA_Session* session)
+void TCP_Sock_Pre::ptp_connect()
 {
     print_config();
 
@@ -64,7 +64,7 @@ RDMA_Endpoint* TCP_Sock_Pre::ptp_connect(RDMA_Session* session)
         remote_sock_ = sock_client_connect(config.server_name, config.tcp_port);
         if (remote_sock_ < 0) {
             log_error(make_string("failed to establish TCP connection to server %s, port %d", config.server_name, config.tcp_port));
-            return NULL;
+            return;
         }
     } else
     // Server Side
@@ -73,21 +73,13 @@ RDMA_Endpoint* TCP_Sock_Pre::ptp_connect(RDMA_Session* session)
         remote_sock_ = sock_server_connect(config.tcp_port);
         if (remote_sock_ < 0) {
             log_error(make_string("failed to establish TCP connection with client on port %d", config.tcp_port));
-            return NULL;
+            return;
         }
     }
     log_ok("TCP connection was established");
-
-    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(session, config.ib_port);
-    session->add_endpoint(new_endpoint);
-    new_endpoint->connect(exchange_qp_data(new_endpoint->get_local_con_data()));
-
-    close(remote_sock_);
-
-    return new_endpoint;
 }
 
-void TCP_Sock_Pre::daemon_connect(RDMA_Session* session)
+void TCP_Sock_Pre::daemon_connect(std::function<void()> connect_callback)
 {
     print_config();
 
@@ -99,7 +91,14 @@ void TCP_Sock_Pre::daemon_connect(RDMA_Session* session)
     log_ok(make_string("Daemon waiting on port %d for TCP connection", config.tcp_port));
 
     // Use a new thread to do the CQ processing
-    daemon_thread_.reset(new std::thread(std::bind(&TCP_Sock_Pre::sock_daemon_connect, this, config.tcp_port, session)));
+    daemon_thread_.reset(new std::thread(std::bind(
+        &TCP_Sock_Pre::sock_daemon_connect, this, config.tcp_port, connect_callback)));
+}
+
+void TCP_Sock_Pre::close_daemon()
+{
+    daemon_run_ = false;
+    write(listen_sock_, NULL, 0);
 }
 
 /*****************************************
@@ -108,7 +107,7 @@ void TCP_Sock_Pre::daemon_connect(RDMA_Session* session)
 
 #define MAX_EVENTS 10
 
-void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
+int TCP_Sock_Pre::sock_daemon_connect(int port, std::function<void()> connect_callback)
 {
     struct addrinfo *res, *t;
     struct addrinfo hints = {
@@ -123,14 +122,14 @@ void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
 
     if (asprintf(&service, "%d", port) < 0) {
         log_error("asprintf failed");
-        return;
+        return -1;
     }
 
     n = getaddrinfo(NULL, service, &hints, &res);
     if (n < 0) {
         log_error(make_string("%s for port %d", gai_strerror(n), port));
         free(service);
-        return;
+        return -1;
     }
 
     for (t = res; t; t = t->ai_next) {
@@ -139,17 +138,6 @@ void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
             n = 1;
 
             setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof n);
-
-            int opts = fcntl(sockfd, F_GETFL);
-            if (opts < 0)
-            {
-                log_error("Fcntl get error");
-            }
-            if (fcntl(sockfd, F_SETFL, opts | O_NONBLOCK) < 0)
-            {
-                log_error("Fcntl set error");
-                return;
-            }
 
             if (!bind(sockfd, t->ai_addr, t->ai_addrlen)) break;
             close(sockfd);
@@ -162,7 +150,19 @@ void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
 
     if (sockfd < 0) {
         log_error(make_string("couldn't listen to port %d", port));
-        return;
+        return -1;
+    }
+
+    int opts = fcntl(sockfd, F_GETFL);
+    if (opts < 0)
+    {
+        log_error("Fcntl get error");
+        return -1;
+    }
+    if (fcntl(sockfd, F_SETFL, opts | O_NONBLOCK) < 0)
+    {
+        log_error("Fcntl set error");
+        return -1;
     }
 
     listen(sockfd, 10);
@@ -171,7 +171,7 @@ void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
     if (epfd < 0)
     {
         log_error("Epoll create error");
-        return;
+        return -1;
     }
 
     ev.events = EPOLLIN;
@@ -179,24 +179,24 @@ void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
     if (epoll_ctl(epfd, EPOLL_CTL_ADD, sockfd, &ev) == -1)
     {
         log_error("Epoll add error");
-        return;
+        return -1;
     }
 
     listen_sock_ = sockfd;
 
-    run_ = true;
+    daemon_run_ = true;
     while (1)
     {
         int nfds = epoll_wait(epfd, events, MAX_EVENTS, -1);
-        if (!run_)
+        if (!daemon_run_)
         {
             close(listen_sock_);
-            return;
+            return -1;
         }
         if (nfds == -1)
         {
             log_error("epoll_wait error");
-            return;
+            return -1;
         }
         for (int i=0;i<nfds;i++)
         {
@@ -207,26 +207,16 @@ void TCP_Sock_Pre::sock_daemon_connect(int port, RDMA_Session* session)
                 {
                     remote_sock_ = connfd;
 
-                    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(session, config.ib_port);
-                    session->add_endpoint(new_endpoint);
-                    new_endpoint->connect(exchange_qp_data(new_endpoint->get_local_con_data()));
-
-                    close(remote_sock_);
+                    connect_callback();
                 }
             } else
             {
                 log_error("Unknown epoll sock event get");
-                return;
+                return -1;
             }
         }
     }
     close(sockfd);
-}
-
-void TCP_Sock_Pre::close_daemon()
-{
-    run_ = false;
-    write(listen_sock_, NULL, 0);
 }
 
 /*****************************************
@@ -263,8 +253,7 @@ int TCP_Sock_Pre::sock_server_connect(int port)
 
             setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &n, sizeof n);
 
-            if (!bind(sockfd, t->ai_addr, t->ai_addrlen))
-                break;
+            if (!bind(sockfd, t->ai_addr, t->ai_addrlen)) break;
             close(sockfd);
             sockfd = -1;
         }

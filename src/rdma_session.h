@@ -19,7 +19,7 @@ public:
     ~RDMA_Session();
 
     void stop_process();
-    void add_endpoint(RDMA_Endpoint* endpoint);
+    RDMA_Endpoint* new_endpoint(RDMA_Pre* pre);
 
     RDMA_Endpoint* ptp_connect(RDMA_Pre* pre);
     void daemon_connect(RDMA_Pre* pre);

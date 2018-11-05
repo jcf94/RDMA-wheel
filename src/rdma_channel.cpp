@@ -94,7 +94,7 @@ void RDMA_Channel::write(uint32_t imm_data, size_t size)
         log_error("Failed to send message: ibv_post_send error");
     } else
     {
-        log_info(make_string("Write Message post: %s", get_message((Message_type)imm_data).data()));
+        log_info(make_string("Write Message post: %s", RDMA_Message::get_message((Message_type)imm_data).data()));
     }
 }
 
@@ -120,7 +120,7 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size)
         log_error("Failed to send message: ibv_post_send error");
     } else
     {
-        log_info(make_string("Send Message post: %s", get_message((Message_type)imm_data).data()));
+        log_info(make_string("Send Message post: %s", RDMA_Message::get_message((Message_type)imm_data).data()));
     }
 }
 

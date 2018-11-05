@@ -20,16 +20,16 @@ public:
     TCP_Sock_Pre();
     ~TCP_Sock_Pre();
 
-    RDMA_Endpoint* ptp_connect(RDMA_Session* session);
-    void daemon_connect(RDMA_Session* session);
+    void ptp_connect();
+    void daemon_connect(std::function<void()> connect_callback);
     void close_daemon();
+    // Exchange QP info to establish the connection
+    struct cm_con_data_t exchange_qp_data(struct cm_con_data_t local_con_data);
 
 private:
     void print_config();
-    // Exchange QP info to establish the connection
-    struct cm_con_data_t exchange_qp_data(struct cm_con_data_t local_con_data);
     // tcp_socket
-    void sock_daemon_connect(int port, RDMA_Session* session);
+    int sock_daemon_connect(int port, std::function<void()> connect_callback);
     int sock_server_connect(int port);
     int sock_client_connect(const char *server_name, int port);
     int sock_recv(int sock_fd, size_t size, void *buf);
@@ -42,7 +42,7 @@ private:
     int remote_sock_;
     // Thread used to be as daemon
     std::unique_ptr<std::thread> daemon_thread_;
-    bool run_;
+    bool daemon_run_;
 };
 
 #endif // !TCP_SOCK_PRE_H
