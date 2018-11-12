@@ -18,7 +18,8 @@ release: all
 debug: CXXFLAGS += -g3 -DDEV_MODE
 debug: all
 
-all: main.cpp rdmalib.a
+#all: main.cpp rdmalib.a
+all: benchmark.cpp rdmalib.a
 	$(CXX) $(CXXFLAGS) -o $@ $^ -libverbs -lmlx4 -pthread
 	$(CLEAN-O)
 	@echo "┌──────────────────────────────┐"
