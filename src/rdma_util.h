@@ -9,17 +9,11 @@ PROG	: RDMA_UTIL_H
 
 #include <stdint.h>
 #include <stdarg.h>
-#include <string.h>
 #include <byteswap.h>
 
 #include <iostream>
 #include <string>
-#include <fstream>
-#include <stdexcept>
-#include <thread>
-#include <memory>
 #include <random>
-#include <mutex>
 
 #include <infiniband/verbs.h>
 

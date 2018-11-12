@@ -8,6 +8,7 @@ PROG	: RDMA_ENDPOINT_H
 #define RDMA_ENDPOINT_H
 
 #include <map>
+#include <mutex>
 
 #include "rdma_util.h"
 

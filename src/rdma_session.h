@@ -7,6 +7,8 @@ PROG	: RDMA_SESSION_H
 #ifndef RDMA_SESSION_H
 #define RDMA_SESSION_H
 
+#include <thread>
+
 #include "rdma_util.h"
 
 class RDMA_Endpoint;
