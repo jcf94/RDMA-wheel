@@ -249,7 +249,7 @@ void RDMA_Session::session_processCQ()
                     log_info(make_string("Message Recv: %s", RDMA_Message::get_message(msgt).data()));
                     switch(msgt)
                     {
-                        case RDMA_MESSAGE_BUFFER_UNLOCK:
+                        case RDMA_MESSAGE_READ_OVER:
                         {
                             Message_Content msg = RDMA_Message::parse_message_content((char*)endpoint->channel()->incoming()->buffer());
                             endpoint->channel()->send_message(RDMA_MESSAGE_ACK);
@@ -346,7 +346,7 @@ void RDMA_Session::session_processCQ()
                     //log_ok(make_string("RDMA Read: %d bytes, total %d bytes", rb->size(), endpoint->total_recv_data()));
 
                     uint64_t res = endpoint->find_in_table((uint64_t)rb);
-                    endpoint->channel()->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
+                    endpoint->channel()->send_message(RDMA_MESSAGE_READ_OVER, res);
 
                     delete rb;
 

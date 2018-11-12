@@ -9,14 +9,18 @@ PROG   : RDMA_MESSAGE_H
 
 #include "rdma_util.h"
 
-enum Message_type
+enum Message_type                   // Use Immediate Number as message type
 {
-    RDMA_MESSAGE_ACK,
-    RDMA_MESSAGE_BUFFER_UNLOCK,
-    RDMA_MESSAGE_WRITE_REQUEST,
-    RDMA_MESSAGE_READ_REQUEST,
-    RDMA_MESSAGE_CLOSE,
-    RDMA_MESSAGE_TERMINATE
+    RDMA_MESSAGE_ACK,               // no extra data
+    RDMA_MESSAGE_CLOSE,             // no extra data
+    RDMA_MESSAGE_TERMINATE,         // no extra data
+
+    RDMA_MESSAGE_WRITE_REQUEST,     // addr(map key), size
+    RDMA_MESSAGE_WRITE_READY,       // addr, size, rkey
+    RDMA_MESSAGE_READ_REQUEST,      // addr, size, rkey
+    RDMA_MESSAGE_READ_OVER,         // addr
+
+    RDMA_DATA                       // not a message, but memory data
 };
 
 struct Buffer_MR
@@ -43,7 +47,8 @@ static const size_t kBufferSizeEndIndex = kBufferSizeStartIndex + sizeof(Message
 
 static const size_t kMessageTotalBytes = kBufferSizeEndIndex;
 
-namespace RDMA_Message {
+namespace RDMA_Message
+{
 
 std::string get_message(Message_type msgt);
 

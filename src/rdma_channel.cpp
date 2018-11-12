@@ -39,7 +39,7 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
             send(msgt, 0);
             break;
         }
-        case RDMA_MESSAGE_BUFFER_UNLOCK:
+        case RDMA_MESSAGE_READ_OVER:
         {
             std::thread* work_thread = new std::thread([this, msgt, addr](){
 
