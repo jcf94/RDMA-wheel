@@ -40,8 +40,13 @@ public:
     uint64_t find_in_table(uint64_t key, bool erase = true);
     void insert_to_table(uint64_t key, uint64_t value);
 
+    void data_send_success(int size);
+    void data_recv_success(int size);
+
     // ----- Private To Public -----
     inline RDMA_Channel* channel() const {return channel_;}
+    inline uint64_t total_send_data() const {return total_send_data_;}
+    inline uint64_t total_recv_data() const {return total_recv_data_;}
 
     bool connected_;
 
@@ -62,6 +67,10 @@ private:
 
     std::multimap<uint64_t, uint64_t> map_table_;
     std::mutex map_lock_;
+
+    //Data count
+    uint64_t total_send_data_ = 0;
+    uint64_t total_recv_data_ = 0;
 };
 
 #endif // !RDMA_ENDPOINT_H

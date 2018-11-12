@@ -270,6 +270,7 @@ int RDMA_Endpoint::modify_qp_to_rts()
 
 uint64_t RDMA_Endpoint::find_in_table(uint64_t key, bool erase)
 {
+    std::lock_guard<std::mutex> lock(map_lock_);
     auto temp = map_table_.find(key);
     if (temp == map_table_.end())
     {
@@ -288,7 +289,17 @@ uint64_t RDMA_Endpoint::find_in_table(uint64_t key, bool erase)
 
 void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)
 {
-    //log_warning(make_string("Insert %p %p", key, value));
     std::lock_guard<std::mutex> lock(map_lock_);
-    map_table_.insert(std::pair<uint64_t, uint64_t>(key, value));
+    //log_warning(make_string("Insert %p %p", key, value));
+    map_table_.insert(std::make_pair(key, value));
+}
+
+void RDMA_Endpoint::data_send_success(int size)
+{
+    total_send_data_ += size;
+}
+
+void RDMA_Endpoint::data_recv_success(int size)
+{
+    total_recv_data_ += size;
 }
