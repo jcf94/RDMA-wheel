@@ -40,7 +40,10 @@ RDMA_Buffer::~RDMA_Buffer()
         log_error("ibv_dereg_mr failed");
     }
 
-    if (buffer_owned_) free(buffer_);
+    if (buffer_owned_)
+    {
+        free(buffer_);
+    }
 
     log_info("RDMA_Buffer Deleted");
 }

@@ -338,10 +338,15 @@ void RDMA_Session::session_processCQ()
                 {
                     RDMA_Buffer* rb = reinterpret_cast<RDMA_Buffer*>(wc_[i].wr_id);
                     char* temp = (char*)rb->buffer();
-                    log_ok(make_string("RDMA Read: %s", temp));
+                    //log_ok(make_string("RDMA Read: %s", temp));
+                    
+                    RDMA_Endpoint* endpoint = rb->endpoint();
 
-                    uint64_t res = rb->endpoint()->find_in_table((uint64_t)rb);
-                    rb->endpoint()->channel()->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
+                    endpoint->data_recv_success(rb->size());
+                    //log_ok(make_string("RDMA Read: %d bytes, total %d bytes", rb->size(), endpoint->total_recv_data()));
+
+                    uint64_t res = endpoint->find_in_table((uint64_t)rb);
+                    endpoint->channel()->send_message(RDMA_MESSAGE_BUFFER_UNLOCK, res);
 
                     delete rb;
 
