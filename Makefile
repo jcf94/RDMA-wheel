@@ -1,10 +1,22 @@
+# ***********************************************
+# MYID : Chen Fan
+# LANG : Makefile
+# PROG : 
+# ***********************************************
+
 CXX = g++
-CXXFLAGS = -std=c++14 -g3
+CXXFLAGS = -std=c++14
 
 SRC = $(wildcard src/*.cpp)
 OBJ = $(patsubst %.cpp,%.o,$(SRC))
 
 CLEAN-O = rm -f src/*.o
+
+release: CXXFLAGS += -O3
+release: all
+
+debug: CXXFLAGS += -g3 -DDEV_MODE
+debug: all
 
 all: main.cpp rdmalib.a
 	$(CXX) $(CXXFLAGS) -o $@ $^ -libverbs -lmlx4 -pthread
