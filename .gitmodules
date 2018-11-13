@@ -1,3 +1,6 @@
 [submodule "utils/MemoryPool"]
 	path = utils/MemoryPool
 	url = https://github.com/jcf94/MemoryPool.git
+[submodule "utils/ThreadPool"]
+	path = utils/ThreadPool
+	url = https://github.com/jcf94/ThreadPool.git
