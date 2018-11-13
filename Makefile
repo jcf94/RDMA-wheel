@@ -4,38 +4,57 @@
 # PROG : 
 # ***********************************************
 
-CXX = g++
-CXXFLAGS = -std=c++14
+CC = g++
+CFLAGS += -std=c++14
 
-SRC = $(wildcard src/*.cpp)
-OBJ = $(patsubst %.cpp,%.o,$(SRC))
+LD = g++
+LDFLAGS += -std=c++14
 
-CLEAN-O = rm -f src/*.o
+#NAME = $(wildcard *.cpp)
+NAME = benchmark.cpp
+#NAME = main.cpp
+NAME-OBJS = $(patsubst %.cpp, %.o, $(NAME))
+TARGET = $(patsubst %.cpp, %, $(NAME))
 
-release: CXXFLAGS += -O3
+SRCS = $(wildcard src/*.cpp)
+SRCS-OBJS = $(patsubst %.cpp, %.o, $(SRCS))
+
+CLEAN-O = rm -f $(SRCS-OBJS) $(NAME-OBJS)
+
+release: CFLAGS += -O3
+release: LDFLAGS += -O3 -libverbs -lmlx4 -pthread
 release: all
 
-debug: CXXFLAGS += -g3 -DDEV_MODE
+debug: CFLAGS += -g3 -DDEV_MODE
+debug: LDFLAGS += -g3 -libverbs -lmlx4 -pthread
 debug: all
 
-#all: main.cpp rdmalib.a
-all: benchmark.cpp rdmalib.a
-	$(CXX) $(CXXFLAGS) -o $@ $^ -libverbs -lmlx4 -pthread
+all: $(TARGET)
 	$(CLEAN-O)
-	@echo "┌──────────────────────────────┐"
+	@echo "=------------------------------="
 	@echo "|     Target Make Success      |"
-	@echo "└──────────────────────────────┘"
+	@echo "=------------------------------="
 
-rdmalib.a: $(OBJ)
+$(TARGET): $(SRCS-OBJS) $(NAME)
+	$(LD) -o $@ $^ $(LDFLAGS)
+
+rdmalib.a: $(SRCS-OBJS)
 	ar rc $@ $^
 
-clean:
-	rm -f all rdmalib.a
-	$(CLEAN-O)
-	@echo "┌──────────────────────────────┐"
-	@echo "|     Target Clean Success     |"
-	@echo "└──────────────────────────────┘"
+%.o: %.cpp
+	$(CC) -o $@ -c $< $(CFLAGS)
 
-aaa:
-	@echo $(SRC)
-	@echo $(OBJ)
+.PHONY: clean
+clean:
+	rm -f $(TARGET)
+	$(CLEAN-O)
+	@echo "=-----------------------------="
+	@echo "|     Target Clean Success    |"
+	@echo "=-----------------------------="
+
+show:
+	@echo NAME: $(NAME)
+	@echo NAME-OBJS: $(NAME-OBJS)
+	@echo TARGET: $(TARGET)
+	@echo SRCS: $(SRCS)
+	@echo SRCS-OBJS: $(SRCS-OBJS)
