@@ -14,6 +14,7 @@ PROG	: RDMA_SESSION_CPP
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 #include "rdma_pre.h"
+#include "../utils/ThreadPool/src/ThreadPool.h"
 
 #define MSG_SIZE 20
 
@@ -64,11 +65,24 @@ RDMA_Session::RDMA_Session(char* dev_name)
     // Use a new thread to do the CQ processing
     process_thread_.reset(new std::thread(std::bind(&RDMA_Session::session_processCQ, this)));
 
+    pool_ = new ThreadPool(DEFAULT_POOL_THREADS);
+    if (pool_)
+    {
+        log_info("ThreadPool Created");
+    } else
+    {
+        log_error("Failed to create ThreadPool");
+        return;
+    }
+
     log_info("RDMA_Session Created");
 }
 
 RDMA_Session::~RDMA_Session()
 {
+    pool_->wait();
+    delete pool_;
+
     stop_process();
 
     for (auto i:endpoint_list_)
