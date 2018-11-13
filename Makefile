@@ -16,7 +16,7 @@ NAME = benchmark.cpp
 NAME-OBJS = $(patsubst %.cpp, %.o, $(NAME))
 TARGET = $(patsubst %.cpp, %, $(NAME))
 
-SRCS = $(wildcard src/*.cpp)
+SRCS = $(wildcard src/*.cpp utils/ThreadPool/src/*.cpp)
 SRCS-OBJS = $(patsubst %.cpp, %.o, $(SRCS))
 
 CLEAN-O = rm -f $(SRCS-OBJS) $(NAME-OBJS)
