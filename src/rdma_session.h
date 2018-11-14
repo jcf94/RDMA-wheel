@@ -46,6 +46,7 @@ private:
     ibv_comp_channel* event_channel_;
     // Completion queue, to poll on work completions
     ibv_cq* cq_;
+    // Pre connection used to establish RDMA link
     RDMA_Pre* pre_ = NULL;
     // List of endpoints
     std::vector<RDMA_Endpoint*> endpoint_list_;
