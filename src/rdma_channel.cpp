@@ -18,8 +18,18 @@ RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     incoming_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
     outgoing_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
 
-    pool_ = new ThreadPool(DEFAULT_POOL_THREADS);
-    if (pool_)
+    work_pool_ = new ThreadPool(6);
+    if (work_pool_)
+    {
+        log_info("ThreadPool Created");
+    } else
+    {
+        log_error("Failed to create ThreadPool");
+        return;
+    }
+
+    unlock_pool_ = new ThreadPool(2);
+    if (unlock_pool_)
     {
         log_info("ThreadPool Created");
     } else
@@ -33,8 +43,11 @@ RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
 
 RDMA_Channel::~RDMA_Channel()
 {
-    pool_->wait();
-    delete pool_;
+    work_pool_->wait();
+    delete work_pool_;
+
+    unlock_pool_->wait();
+    delete unlock_pool_;
 
     delete incoming_;
     delete outgoing_;
@@ -55,14 +68,21 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
         }
         case RDMA_MESSAGE_READ_OVER:
         {
-            std::thread* work_thread = new std::thread([this, msgt, addr](){
+            // std::thread* work_thread = new std::thread([this, msgt, addr](){
 
+            //     lock();
+
+            //     RDMA_Message::fill_message_content((char*)outgoing_->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
+            //     write(msgt, kRemoteAddrEndIndex);
+            // });
+            // work_thread->detach();
+            work_pool_->add_task([this, msgt, addr]()
+            {
                 lock();
 
                 RDMA_Message::fill_message_content((char*)outgoing_->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
                 write(msgt, kRemoteAddrEndIndex);
             });
-            work_thread->detach();
             break;
         }
         default:
@@ -72,8 +92,19 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
 
 void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
-    std::thread* work_thread = new std::thread([this, buffer](){
+    // std::thread* work_thread = new std::thread([this, buffer](){
 
+    //     lock();
+
+    //     endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
+
+    //     RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
+    //     write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
+    // });
+    // work_thread->detach();
+
+    work_pool_->add_task([this, buffer]()
+    {
         lock();
 
         endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
@@ -81,7 +112,6 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
         RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
         write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
     });
-    work_thread->detach();
 }
 
 void RDMA_Channel::write(uint32_t imm_data, size_t size)
@@ -149,14 +179,20 @@ void RDMA_Channel::lock()
 
 void RDMA_Channel::release_local()
 {
-    std::lock_guard<std::mutex> lock(channel_cv_mutex_);
-    local_status_ = IDLE;
-    channel_cv_.notify_one();
+    unlock_pool_->add_task([this]()
+    {
+        std::lock_guard<std::mutex> lock(channel_cv_mutex_);
+        local_status_ = IDLE;
+        channel_cv_.notify_one();
+    });
 }
 
 void RDMA_Channel::release_remote()
 {
-    std::lock_guard<std::mutex> lock(channel_cv_mutex_);
-    remote_status_ = IDLE;
-    channel_cv_.notify_one();
+    unlock_pool_->add_task([this]()
+    {
+        std::lock_guard<std::mutex> lock(channel_cv_mutex_);
+        remote_status_ = IDLE;
+        channel_cv_.notify_one();
+    });
 }

@@ -11,8 +11,8 @@ LD = g++
 LDFLAGS += -std=c++14
 
 #NAME = $(wildcard *.cpp)
-#NAME = benchmark.cpp
-NAME = main.cpp
+NAME = benchmark.cpp
+#NAME = main.cpp
 NAME-OBJS = $(patsubst %.cpp, %.o, $(NAME))
 TARGET = $(patsubst %.cpp, %, $(NAME))
 

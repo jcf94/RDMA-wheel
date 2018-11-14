@@ -52,9 +52,9 @@ private:
     ibv_qp* qp_;
 
     // Message incoming buffer, only read
-    RDMA_Buffer* incoming_;
+    RDMA_Buffer* incoming_ = NULL;
     // Message outgoing buffer
-    RDMA_Buffer* outgoing_;
+    RDMA_Buffer* outgoing_ = NULL;
     // Whether it's ready to recv incoming message
     Channel_status remote_status_;
     // Whether it's ready to send outgoing message
@@ -63,7 +63,8 @@ private:
     std::mutex channel_cv_mutex_;
     std::condition_variable channel_cv_;
     // ThreadPool used for data process
-    ThreadPool* pool_ = NULL;
+    ThreadPool* work_pool_ = NULL;
+    ThreadPool* unlock_pool_ = NULL;
 };
 
 #endif // !RDMA_CHANNEL_H
