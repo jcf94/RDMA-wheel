@@ -12,6 +12,8 @@ PROG	: RDMA_CHANNEL_H
 
 #include "rdma_message.h"
 
+#define DEFAULT_POOL_THREADS 8
+
 enum Channel_status
 {
     IDLE,
@@ -20,6 +22,7 @@ enum Channel_status
 
 class RDMA_Endpoint;
 class RDMA_Buffer;
+class ThreadPool;
 
 class RDMA_Channel
 {
@@ -52,12 +55,15 @@ private:
     RDMA_Buffer* incoming_;
     // Message outgoing buffer
     RDMA_Buffer* outgoing_;
-
+    // Whether it's ready to recv incoming message
+    Channel_status remote_status_;
+    // Whether it's ready to send outgoing message
+    Channel_status local_status_;
+    // cv & mutex to lock the remote/local status
     std::mutex channel_cv_mutex_;
     std::condition_variable channel_cv_;
-
-    Channel_status local_status_;
-    Channel_status remote_status_;
+    // ThreadPool used for data process
+    ThreadPool* pool_ = NULL;
 };
 
 #endif // !RDMA_CHANNEL_H

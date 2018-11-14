@@ -7,6 +7,7 @@ PROG	: RDMA_CHANNEL_CPP
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
+#include "../utils/ThreadPool/src/ThreadPool.h"
 
 #include <thread>
 
@@ -17,11 +18,24 @@ RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     incoming_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
     outgoing_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
 
+    pool_ = new ThreadPool(DEFAULT_POOL_THREADS);
+    if (pool_)
+    {
+        log_info("ThreadPool Created");
+    } else
+    {
+        log_error("Failed to create ThreadPool");
+        return;
+    }
+
     log_info("RDMA_Channel Created");
 }
 
 RDMA_Channel::~RDMA_Channel()
 {
+    pool_->wait();
+    delete pool_;
+
     delete incoming_;
     delete outgoing_;
 

@@ -13,9 +13,6 @@ PROG	: RDMA_SESSION_H
 
 class RDMA_Endpoint;
 class RDMA_Pre;
-class ThreadPool;
-
-#define DEFAULT_POOL_THREADS 8
 
 class RDMA_Session
 {
@@ -54,8 +51,6 @@ private:
     std::vector<RDMA_Endpoint*> endpoint_list_;
     // Thread used to process CQ
     std::unique_ptr<std::thread> process_thread_;
-    // ThreadPool used for data process
-    ThreadPool* pool_ = NULL;
 };
 
 #endif // !RDMA_SESSION_H
