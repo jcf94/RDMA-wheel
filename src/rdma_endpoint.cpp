@@ -224,32 +224,6 @@ int RDMA_Endpoint::modify_qp_to_rts()
     return 0;
 }
 
-uint64_t RDMA_Endpoint::find_in_table(uint64_t key, bool erase)
-{
-    std::lock_guard<std::mutex> lock(map_lock_);
-    auto temp = map_table_.find(key);
-    if (temp == map_table_.end())
-    {
-        log_error("Request key not found in map_table");
-        return 0;
-    } else
-    {
-        //log_warning(make_string("Find %p %p", temp->first, temp->second));
-        uint64_t res = temp->second;
-        // Erase is important, if two RDMA_Buffer has same address
-        // the table find result will be a out of date value
-        if (erase) map_table_.erase(temp);
-        return res;
-    }
-}
-
-void RDMA_Endpoint::insert_to_table(uint64_t key, uint64_t value)
-{
-    std::lock_guard<std::mutex> lock(map_lock_);
-    //log_warning(make_string("Insert %p %p", key, value));
-    map_table_.insert(std::make_pair(key, value));
-}
-
 void RDMA_Endpoint::data_send_success(int size)
 {
     total_send_data_ += size;

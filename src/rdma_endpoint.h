@@ -7,9 +7,6 @@ PROG	: RDMA_ENDPOINT_H
 #ifndef RDMA_ENDPOINT_H
 #define RDMA_ENDPOINT_H
 
-#include <map>
-#include <mutex>
-
 #include <infiniband/verbs.h>
 
 struct RDMA_Endpoint_Info
@@ -33,9 +30,6 @@ public:
     void close();
 
     void send_data(void* addr, int size);
-
-    uint64_t find_in_table(uint64_t key, bool erase = true);
-    void insert_to_table(uint64_t key, uint64_t value);
 
     void data_send_success(int size);
     void data_recv_success(int size);
@@ -64,9 +58,6 @@ private:
     RDMA_Endpoint_Info self_, remote_;
     // Message channel
     RDMA_Channel* channel_ = NULL;
-
-    std::multimap<uint64_t, uint64_t> map_table_;
-    std::mutex map_lock_;
 
     //Data count
     uint64_t total_send_data_ = 0;

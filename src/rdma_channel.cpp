@@ -66,7 +66,7 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
     task_with_lock([this, buffer]
     {
-        endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
+        insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
 
         RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
         write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
@@ -164,6 +164,32 @@ void RDMA_Channel::read_data(RDMA_Buffer* buffer, Message_Content msg)
     {
         log_info(make_string("Send Message post: RDMA_READ"));
     }
+}
+
+uint64_t RDMA_Channel::find_in_table(uint64_t key, bool erase)
+{
+    std::lock_guard<std::mutex> lock(map_lock_);
+    auto temp = map_table_.find(key);
+    if (temp == map_table_.end())
+    {
+        log_error("Request key not found in map_table");
+        return 0;
+    } else
+    {
+        //log_warning(make_string("Find %p %p", temp->first, temp->second));
+        uint64_t res = temp->second;
+        // Erase is important, if two RDMA_Buffer has same address
+        // the table find result will be a out of date value
+        if (erase) map_table_.erase(temp);
+        return res;
+    }
+}
+
+void RDMA_Channel::insert_to_table(uint64_t key, uint64_t value)
+{
+    std::lock_guard<std::mutex> lock(map_lock_);
+    //log_warning(make_string("Insert %p %p", key, value));
+    map_table_.insert(std::make_pair(key, value));
 }
 
 void RDMA_Channel::task_with_lock(std::function<void()> task)

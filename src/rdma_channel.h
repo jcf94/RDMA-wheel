@@ -7,6 +7,7 @@ PROG	: RDMA_CHANNEL_H
 #ifndef RDMA_CHANNEL_H
 #define RDMA_CHANNEL_H
 
+#include <map>
 #include <mutex>
 #include <condition_variable>
 #include <functional>
@@ -41,6 +42,9 @@ public:
     void recv();
     void read_data(RDMA_Buffer* buffer, struct Message_Content msg);
 
+    uint64_t find_in_table(uint64_t key, bool erase = true);
+    void insert_to_table(uint64_t key, uint64_t value);
+
     void task_with_lock(std::function<void()> task);
     void release_local();
     void release_remote();
@@ -58,6 +62,9 @@ private:
 
     // Queue pair
     ibv_qp* qp_;
+
+    std::multimap<uint64_t, uint64_t> map_table_;
+    std::mutex map_lock_;
 
     // Message incoming buffer, only read
     RDMA_Buffer* incoming_ = NULL;

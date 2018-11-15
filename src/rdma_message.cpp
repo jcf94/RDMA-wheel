@@ -105,7 +105,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc)
             Message_Content msg = RDMA_Message::parse_message_content((char*)channel->incoming()->buffer());
             send_message_to_channel(channel, RDMA_MESSAGE_ACK);
 
-            RDMA_Buffer* buf = (RDMA_Buffer*)channel->endpoint()->find_in_table((uint64_t)msg.buffer_mr.remote_addr);
+            RDMA_Buffer* buf = (RDMA_Buffer*)channel->find_in_table((uint64_t)msg.buffer_mr.remote_addr);
             delete buf;
 
             break;
@@ -119,7 +119,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc)
 
             RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, endpoint->pd(), msg.buffer_size);
 
-            endpoint->insert_to_table((uint64_t)test_new, (uint64_t)msg.buffer_mr.remote_addr
+            channel->insert_to_table((uint64_t)test_new, (uint64_t)msg.buffer_mr.remote_addr
             );
 
             channel->read_data(test_new, msg);
@@ -192,7 +192,7 @@ void RDMA_Message::process_read_success(const ibv_wc &wc)
     endpoint->data_recv_success(rb->size());
     //log_ok(make_string("RDMA Read: %d bytes, total %d bytes", rb->size(), endpoint->total_recv_data()));
 
-    uint64_t res = endpoint->find_in_table((uint64_t)rb);
+    uint64_t res = endpoint->channel()->find_in_table((uint64_t)rb);
     send_message_to_channel(endpoint->channel(), RDMA_MESSAGE_READ_OVER, res);
 
     delete rb;
