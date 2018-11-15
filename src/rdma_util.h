@@ -15,8 +15,6 @@ PROG	: RDMA_UTIL_H
 #include <string>
 #include <random>
 
-#include <infiniband/verbs.h>
-
 //#define DEV_MODE
 
 // ---- WHEEL

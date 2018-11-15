@@ -10,6 +10,7 @@ PROG	: TCP_SOCK_PRE_CPP
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 
 #include "tcp_sock_pre.h"
 #include "rdma_util.h"
