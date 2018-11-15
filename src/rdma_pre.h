@@ -15,7 +15,7 @@ struct config_t
     int ib_port;        /* local IB port to work with */
 };
 
-class RDMA_Pre
+class RDMA_Pre      // Responsible for pre connection before RDMA, it's needed for info exchange
 {
 public:
     RDMA_Pre() {}

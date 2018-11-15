@@ -59,7 +59,7 @@ enum Session_status
 class RDMA_Endpoint;
 class RDMA_Channel;
 
-namespace RDMA_Message
+namespace RDMA_Message  // Custom message protocol
 {
 
 std::string get_message(Message_type msgt);

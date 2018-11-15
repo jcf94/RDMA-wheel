@@ -18,7 +18,7 @@ struct RDMA_Endpoint_Info
 
 class RDMA_Channel;
 
-class RDMA_Endpoint
+class RDMA_Endpoint     // Responsible for connection establishment, hide RDMA low level details in Channel
 {
 public:
     RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size);

@@ -29,7 +29,7 @@ class ThreadPool;
 
 struct Buffer_MR;
 
-class RDMA_Channel
+class RDMA_Channel      // Responsible for RDMA low level data transform
 {
 public:
     RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp);

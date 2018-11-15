@@ -14,7 +14,7 @@ PROG	: RDMA_SESSION_H
 class RDMA_Endpoint;
 class RDMA_Pre;
 
-class RDMA_Session
+class RDMA_Session      // Responsible for IB device management, holds multi Endpoint
 {
 public:
     RDMA_Session(char* dev_name = NULL);
