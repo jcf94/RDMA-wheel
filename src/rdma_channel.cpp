@@ -58,7 +58,7 @@ RDMA_Channel::~RDMA_Channel()
 
 void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
-    lock([this, buffer]
+    task_with_lock([this, buffer]
     {
         endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
 
@@ -121,7 +121,7 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size)
     }
 }
 
-void RDMA_Channel::lock(std::function<void()> task)
+void RDMA_Channel::task_with_lock(std::function<void()> task)
 {
     work_pool_->add_task([this, task]
     {

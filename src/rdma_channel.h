@@ -39,7 +39,7 @@ public:
     void write(uint32_t imm_data, size_t size);
     void send(uint32_t imm_data, size_t size);
 
-    void lock(std::function<void()> task);
+    void task_with_lock(std::function<void()> task);
     void release_local();
     void release_remote();
 
@@ -53,7 +53,7 @@ public:
 
 private:
 
-    RDMA_Endpoint* endpoint_;
+    RDMA_Endpoint* endpoint_ = NULL;
     ibv_pd* pd_;
     ibv_qp* qp_;
 

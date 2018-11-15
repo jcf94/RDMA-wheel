@@ -26,7 +26,7 @@ public:
 
 private:
     bool buffer_owned_;
-    RDMA_Endpoint* endpoint_;
+    RDMA_Endpoint* endpoint_ = NULL;
 
     void* buffer_ = NULL;
     uint64_t size_;
