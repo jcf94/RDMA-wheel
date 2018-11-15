@@ -18,7 +18,7 @@ RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     incoming_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
     outgoing_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
 
-    work_pool_ = new ThreadPool(6);
+    work_pool_ = new ThreadPool(DEFAULT_WORK_POOL_THREADS);
     if (work_pool_)
     {
         log_info("ThreadPool Created");
@@ -28,7 +28,7 @@ RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
         return;
     }
 
-    unlock_pool_ = new ThreadPool(2);
+    unlock_pool_ = new ThreadPool(DEFAULT_UNLOCK_POOL_THREADS);
     if (unlock_pool_)
     {
         log_info("ThreadPool Created");
@@ -68,15 +68,7 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
         }
         case RDMA_MESSAGE_READ_OVER:
         {
-            // std::thread* work_thread = new std::thread([this, msgt, addr](){
-
-            //     lock();
-
-            //     RDMA_Message::fill_message_content((char*)outgoing_->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
-            //     write(msgt, kRemoteAddrEndIndex);
-            // });
-            // work_thread->detach();
-            work_pool_->add_task([this, msgt, addr]()
+            work_pool_->add_task([this, msgt, addr]
             {
                 lock();
 
@@ -92,18 +84,7 @@ void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
 
 void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
-    // std::thread* work_thread = new std::thread([this, buffer](){
-
-    //     lock();
-
-    //     endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
-
-    //     RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
-    //     write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
-    // });
-    // work_thread->detach();
-
-    work_pool_->add_task([this, buffer]()
+    work_pool_->add_task([this, buffer]
     {
         lock();
 
@@ -171,15 +152,14 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size)
 void RDMA_Channel::lock()
 {
     std::unique_lock<std::mutex> lock(channel_cv_mutex_);
-    while (local_status_ == LOCK || remote_status_ == LOCK)
-        channel_cv_.wait(lock);
+    channel_cv_.wait(lock, [this]{return local_status_ != LOCK && remote_status_ != LOCK;});
     local_status_ = LOCK;
     remote_status_ = LOCK;
 }
 
 void RDMA_Channel::release_local()
 {
-    unlock_pool_->add_task([this]()
+    unlock_pool_->add_task([this]
     {
         std::lock_guard<std::mutex> lock(channel_cv_mutex_);
         local_status_ = IDLE;
@@ -189,7 +169,7 @@ void RDMA_Channel::release_local()
 
 void RDMA_Channel::release_remote()
 {
-    unlock_pool_->add_task([this]()
+    unlock_pool_->add_task([this]
     {
         std::lock_guard<std::mutex> lock(channel_cv_mutex_);
         remote_status_ = IDLE;

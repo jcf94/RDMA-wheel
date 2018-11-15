@@ -7,6 +7,7 @@ PROG   : RDMA_MESSAGE_H
 #ifndef RDMA_MESSAGE_H
 #define RDMA_MESSAGE_H
 
+#include <vector>
 #include "rdma_util.h"
 
 enum Message_type                   // Use Immediate Number as message type
@@ -47,6 +48,15 @@ static const size_t kBufferSizeEndIndex = kBufferSizeStartIndex + sizeof(Message
 
 static const size_t kMessageTotalBytes = kBufferSizeEndIndex;
 
+enum Session_status
+{
+    WORK,
+    CLOSING,
+    CLOSED
+};
+
+class RDMA_Endpoint;
+
 namespace RDMA_Message
 {
 
@@ -54,6 +64,12 @@ std::string get_message(Message_type msgt);
 
 void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr);
 Message_Content parse_message_content(char* content);
+
+void process_attached_message(ibv_wc &wc);
+void process_immediate_message(ibv_wc &wc, Session_status &status, std::vector<RDMA_Endpoint*> &endpoint_list);
+void process_write_success(ibv_wc &wc);
+void process_send_success(ibv_wc &wc);
+void process_read_success(ibv_wc &wc);
 
 };
 

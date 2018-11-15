@@ -12,7 +12,9 @@ PROG	: RDMA_CHANNEL_H
 
 #include "rdma_message.h"
 
-#define DEFAULT_POOL_THREADS 8
+#define DEFAULT_TOTAL_POOL_THREADS 8
+#define DEFAULT_WORK_POOL_THREADS 6
+#define DEFAULT_UNLOCK_POOL_THREADS (DEFAULT_TOTAL_POOL_THREADS - DEFAULT_WORK_POOL_THREADS)
 
 enum Channel_status
 {
@@ -38,6 +40,7 @@ public:
     void release_remote();
 
     // ----- Private To Public -----
+    inline ibv_pd* pd() const {return pd_;}
     inline RDMA_Buffer* incoming() const {return incoming_;}
     inline RDMA_Buffer* outgoing() const {return outgoing_;}
 
