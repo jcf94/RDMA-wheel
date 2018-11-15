@@ -139,6 +139,33 @@ void RDMA_Channel::recv()
     }
 }
 
+void RDMA_Channel::read_data(RDMA_Buffer* buffer, Message_Content msg)
+{
+    struct ibv_sge list;
+    list.addr = (uint64_t) buffer->buffer();
+    list.length = msg.buffer_size;
+    list.lkey = buffer->mr()->lkey;
+
+    struct ibv_send_wr wr;
+    memset(&wr, 0, sizeof(wr));
+    wr.wr_id = (uint64_t) buffer; // The RDMA_Buffer used to store the data
+    wr.sg_list = &list;
+    wr.num_sge = 1;
+    wr.opcode = IBV_WR_RDMA_READ;
+    wr.send_flags = IBV_SEND_SIGNALED;
+    wr.wr.rdma.remote_addr = (uint64_t) msg.buffer_mr.remote_addr;
+    wr.wr.rdma.rkey = msg.buffer_mr.rkey;
+
+    struct ibv_send_wr *bad_wr;
+    if (ibv_post_send(qp_, &wr, &bad_wr))
+    {
+        log_error("Failed to post send");
+    } else
+    {
+        log_info(make_string("Send Message post: RDMA_READ"));
+    }
+}
+
 void RDMA_Channel::task_with_lock(std::function<void()> task)
 {
     work_pool_->add_task([this, task]

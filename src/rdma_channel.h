@@ -39,6 +39,7 @@ public:
     void write(uint32_t imm_data, size_t size);
     void send(uint32_t imm_data, size_t size);
     void recv();
+    void read_data(RDMA_Buffer* buffer, struct Message_Content msg);
 
     void task_with_lock(std::function<void()> task);
     void release_local();

@@ -122,7 +122,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc)
             endpoint->insert_to_table((uint64_t)test_new, (uint64_t)msg.buffer_mr.remote_addr
             );
 
-            endpoint->read_data(test_new, msg);
+            channel->read_data(test_new, msg);
 
             break;
         }
