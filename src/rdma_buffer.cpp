@@ -4,6 +4,8 @@ LANG	: G++
 PROG	: RDMA_BUFFER_CPP
 ************************************************ */
 
+#include "rdma_util.h"
+
 #include "rdma_buffer.h"
 
 RDMA_Buffer::RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size)

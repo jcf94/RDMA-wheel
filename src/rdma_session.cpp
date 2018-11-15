@@ -9,6 +9,8 @@ PROG	: RDMA_SESSION_CPP
 #include <functional>
 #include <map>
 
+#include "rdma_util.h"
+
 #include "rdma_session.h"
 #include "rdma_endpoint.h"
 #include "rdma_pre.h"
@@ -236,7 +238,7 @@ void RDMA_Session::session_processCQ()
                     RDMA_Message::process_attached_message(wc_[i]);
                     break;
                 }
-                case IBV_WC_RECV:               // Recv Remote RDMA Send Message
+                case IBV_WC_RECV:       // Recv Remote RDMA Send Message
                 {
                     RDMA_Message::process_immediate_message(wc_[i], status, endpoint_list_);
                     break;

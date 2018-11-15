@@ -8,7 +8,8 @@ PROG   : RDMA_MESSAGE_H
 #define RDMA_MESSAGE_H
 
 #include <vector>
-#include "rdma_util.h"
+#include <string>
+#include <infiniband/verbs.h>
 
 enum Message_type                   // Use Immediate Number as message type
 {

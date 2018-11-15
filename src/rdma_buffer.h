@@ -7,7 +7,7 @@ PROG	: RDMA_BUFFER_H
 #ifndef RDMA_BUFFER_H
 #define RDMA_BUFFER_H
 
-#include "rdma_util.h"
+#include <infiniband/verbs.h>
 
 class RDMA_Endpoint;
 

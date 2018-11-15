@@ -8,8 +8,8 @@ PROG	: RDMA_SESSION_H
 #define RDMA_SESSION_H
 
 #include <thread>
-
-#include "rdma_util.h"
+#include <vector>
+#include <infiniband/verbs.h>
 
 class RDMA_Endpoint;
 class RDMA_Pre;

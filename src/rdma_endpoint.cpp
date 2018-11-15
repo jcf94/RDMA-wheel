@@ -5,6 +5,7 @@ PROG	: RDMA_ENDPOINT_CPP
 ************************************************ */
 
 #include <netdb.h>
+#include "rdma_util.h"
 
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"

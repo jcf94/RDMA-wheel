@@ -4,6 +4,8 @@ LANG	: G++
 PROG	: RDMA_CHANNEL_CPP
 ************************************************ */
 
+#include "rdma_util.h"
+
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"

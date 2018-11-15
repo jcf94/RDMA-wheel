@@ -11,6 +11,8 @@ PROG   : benchmark
 #include <thread>
 #include <chrono>
 
+#include "src/rdma_util.h"
+
 #include "src/rdma_session.h"
 #include "src/rdma_endpoint.h"
 #include "src/tcp_sock_pre.h"
