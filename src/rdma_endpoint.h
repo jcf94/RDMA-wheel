@@ -34,7 +34,6 @@ public:
 
     void send_data(void* addr, int size);
     void read_data(RDMA_Buffer* buffer, struct Message_Content msg);
-    void recv();
 
     uint64_t find_in_table(uint64_t key, bool erase = true);
     void insert_to_table(uint64_t key, uint64_t value);

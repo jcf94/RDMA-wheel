@@ -60,12 +60,6 @@ RDMA_Endpoint::RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int i
     // outgoing_abuffer_ = new RDMA_Buffer(this, SIZE);
     channel_ = new RDMA_Channel(this, pd_, qp_);
 
-    // post recv
-    for (int i=0;i<100;i++)
-    {
-        recv();
-    }
-
     log_info("RDMA_Endpoint Created");
 }
 
@@ -143,18 +137,6 @@ void RDMA_Endpoint::send_data(void* addr, int size)
 {
     RDMA_Buffer* new_buffer = new RDMA_Buffer(this, pd_, size, addr);
     channel_->request_read(new_buffer);
-}
-
-void RDMA_Endpoint::recv()
-{
-    struct ibv_recv_wr wr;
-    memset(&wr, 0, sizeof(wr));
-    wr.wr_id = (uint64_t) this; // Which RDMA_Endpoint get this message
-    struct ibv_recv_wr* bad_wr;
-    if (ibv_post_recv(qp_, &wr, &bad_wr))
-    {
-        log_error("Failed to post recv");
-    }
 }
 
 void RDMA_Endpoint::read_data(RDMA_Buffer* buffer, Message_Content msg)

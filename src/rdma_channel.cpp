@@ -15,6 +15,12 @@ PROG	: RDMA_CHANNEL_CPP
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     : endpoint_(endpoint), qp_(qp), local_status_(IDLE), remote_status_(IDLE)
 {
+    // post recv
+    for (int i=0;i<100;i++)
+    {
+        recv();
+    }
+
     // Create Message Buffer ......
     incoming_ = new RDMA_Buffer(endpoint, pd, kMessageTotalBytes);
     outgoing_ = new RDMA_Buffer(endpoint, pd, kMessageTotalBytes);
@@ -118,6 +124,18 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size)
     } else
     {
         log_info(make_string("Send Message post: %s", RDMA_Message::get_message((Message_type)imm_data).data()));
+    }
+}
+
+void RDMA_Channel::recv()
+{
+    struct ibv_recv_wr wr;
+    memset(&wr, 0, sizeof(wr));
+    wr.wr_id = (uint64_t) this; // Which RDMA_Channel get this message
+    struct ibv_recv_wr* bad_wr;
+    if (ibv_post_recv(qp_, &wr, &bad_wr))
+    {
+        log_error("Failed to post recv");
     }
 }
 

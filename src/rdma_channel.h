@@ -38,12 +38,14 @@ public:
 
     void write(uint32_t imm_data, size_t size);
     void send(uint32_t imm_data, size_t size);
+    void recv();
 
     void task_with_lock(std::function<void()> task);
     void release_local();
     void release_remote();
 
     // ----- Private To Public -----
+    inline RDMA_Endpoint* endpoint() const {return endpoint_;}
     inline RDMA_Buffer* incoming() const {return incoming_;}
     inline RDMA_Buffer* outgoing() const {return outgoing_;}
 
