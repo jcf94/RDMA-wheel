@@ -12,8 +12,6 @@ PROG	: RDMA_CHANNEL_CPP
 #include "rdma_buffer.h"
 #include "../utils/ThreadPool/src/ThreadPool.h"
 
-#include <thread>
-
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     : endpoint_(endpoint), qp_(qp), pd_(pd), local_status_(IDLE), remote_status_(IDLE)
 {
@@ -60,10 +58,8 @@ RDMA_Channel::~RDMA_Channel()
 
 void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
-    work_pool_->add_task([this, buffer]
+    lock([this, buffer]
     {
-        lock();
-
         endpoint_->insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
 
         RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
@@ -125,12 +121,17 @@ void RDMA_Channel::send(uint32_t imm_data, size_t size)
     }
 }
 
-void RDMA_Channel::lock()
+void RDMA_Channel::lock(std::function<void()> task)
 {
-    std::unique_lock<std::mutex> lock(channel_cv_mutex_);
-    channel_cv_.wait(lock, [this]{return local_status_ != LOCK && remote_status_ != LOCK;});
-    local_status_ = LOCK;
-    remote_status_ = LOCK;
+    work_pool_->add_task([this, task]
+    {
+        std::unique_lock<std::mutex> lock(channel_cv_mutex_);
+        channel_cv_.wait(lock, [this]{return local_status_ != LOCK && remote_status_ != LOCK;});
+        local_status_ = LOCK;
+        remote_status_ = LOCK;
+
+        task();
+    });
 }
 
 void RDMA_Channel::release_local()

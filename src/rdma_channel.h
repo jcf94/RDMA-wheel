@@ -9,6 +9,7 @@ PROG	: RDMA_CHANNEL_H
 
 #include <mutex>
 #include <condition_variable>
+#include <functional>
 #include <infiniband/verbs.h>
 
 #define DEFAULT_TOTAL_POOL_THREADS 8
@@ -38,7 +39,7 @@ public:
     void write(uint32_t imm_data, size_t size);
     void send(uint32_t imm_data, size_t size);
 
-    void lock();
+    void lock(std::function<void()> task);
     void release_local();
     void release_remote();
 

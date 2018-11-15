@@ -11,8 +11,6 @@ PROG   : RDMA_MESSAGE_CPP
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
 
-#include "../utils/ThreadPool/src/ThreadPool.h"
-
 std::string RDMA_Message::get_message(Message_type msgt)
 {
     switch(msgt)
@@ -77,10 +75,8 @@ void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type m
         }
         case RDMA_MESSAGE_READ_OVER:
         {
-            channel->work_pool()->add_task([channel, msgt, addr]
+            channel->lock([channel, msgt, addr]
             {
-                channel->lock();
-
                 RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
                 channel->write(msgt, kRemoteAddrEndIndex);
             });
