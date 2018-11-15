@@ -189,7 +189,6 @@ void RDMA_Session::daemon_connect(RDMA_Pre* pre)
 
 void RDMA_Session::session_processCQ()
 {
-
     Session_status status = WORK;
     while (status != CLOSED)
     {

@@ -6,6 +6,7 @@ PROG	: RDMA_CHANNEL_CPP
 
 #include "rdma_util.h"
 
+#include "rdma_message.h"
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
@@ -55,33 +56,6 @@ RDMA_Channel::~RDMA_Channel()
     delete outgoing_;
 
     log_info("RDMA_Channel Deleted");
-}
-
-void RDMA_Channel::send_message(Message_type msgt, uint64_t addr)
-{
-    switch(msgt)
-    {
-        case RDMA_MESSAGE_ACK:
-        case RDMA_MESSAGE_CLOSE:
-        case RDMA_MESSAGE_TERMINATE:
-        {
-            send(msgt, 0);
-            break;
-        }
-        case RDMA_MESSAGE_READ_OVER:
-        {
-            work_pool_->add_task([this, msgt, addr]
-            {
-                lock();
-
-                RDMA_Message::fill_message_content((char*)outgoing_->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
-                write(msgt, kRemoteAddrEndIndex);
-            });
-            break;
-        }
-        default:
-            log_error("Unsupported Message Type");
-    }
 }
 
 void RDMA_Channel::request_read(RDMA_Buffer* buffer)

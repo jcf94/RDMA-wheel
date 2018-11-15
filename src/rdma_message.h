@@ -57,6 +57,7 @@ enum Session_status
 };
 
 class RDMA_Endpoint;
+class RDMA_Channel;
 
 namespace RDMA_Message
 {
@@ -65,12 +66,13 @@ std::string get_message(Message_type msgt);
 
 void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr);
 Message_Content parse_message_content(char* content);
+void send_message_to_channel(RDMA_Channel* channel, Message_type msgt, uint64_t addr = 0);
 
-void process_attached_message(ibv_wc &wc);
-void process_immediate_message(ibv_wc &wc, Session_status &status, std::vector<RDMA_Endpoint*> &endpoint_list);
-void process_write_success(ibv_wc &wc);
-void process_send_success(ibv_wc &wc);
-void process_read_success(ibv_wc &wc);
+void process_attached_message(const ibv_wc &wc);
+void process_immediate_message(const ibv_wc &wc, Session_status &status, std::vector<RDMA_Endpoint*> &endpoint_list);
+void process_write_success(const ibv_wc &wc);
+void process_send_success(const ibv_wc &wc);
+void process_read_success(const ibv_wc &wc);
 
 };
 

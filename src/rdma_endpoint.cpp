@@ -7,6 +7,7 @@ PROG	: RDMA_ENDPOINT_CPP
 #include <netdb.h>
 #include "rdma_util.h"
 
+#include "rdma_message.h"
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
 #include "rdma_channel.h"
@@ -130,8 +131,8 @@ void RDMA_Endpoint::close()
 {
     if (connected_)
     {
-        channel_->send_message(RDMA_MESSAGE_CLOSE);
-        channel_->send_message(RDMA_MESSAGE_TERMINATE);
+        RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_CLOSE);
+        RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_TERMINATE);
         connected_ = false;
     } else
     {

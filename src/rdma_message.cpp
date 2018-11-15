@@ -11,6 +11,8 @@ PROG   : RDMA_MESSAGE_CPP
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
 
+#include "../utils/ThreadPool/src/ThreadPool.h"
+
 std::string RDMA_Message::get_message(Message_type msgt)
 {
     switch(msgt)
@@ -61,7 +63,37 @@ Message_Content RDMA_Message::parse_message_content(char* content)
     return msg;
 }
 
-void RDMA_Message::process_attached_message(ibv_wc &wc)
+
+void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type msgt, uint64_t addr)
+{
+    switch(msgt)
+    {
+        case RDMA_MESSAGE_ACK:
+        case RDMA_MESSAGE_CLOSE:
+        case RDMA_MESSAGE_TERMINATE:
+        {
+            channel->send(msgt, 0);
+            break;
+        }
+        case RDMA_MESSAGE_READ_OVER:
+        {
+            channel->work_pool()->add_task([channel, msgt, addr]
+            {
+                channel->lock();
+
+                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
+                channel->write(msgt, kRemoteAddrEndIndex);
+            });
+            break;
+        }
+        default:
+            log_error("Unsupported Message Type");
+    }
+}
+
+// --------------------- Message Process ---------------------
+
+void RDMA_Message::process_attached_message(const ibv_wc &wc)
 {
     // Which RDMA_Endpoint get this message
     RDMA_Endpoint* endpoint = reinterpret_cast<RDMA_Endpoint*>(wc.wr_id);
@@ -75,7 +107,8 @@ void RDMA_Message::process_attached_message(ibv_wc &wc)
         case RDMA_MESSAGE_READ_OVER:
         {
             Message_Content msg = RDMA_Message::parse_message_content((char*)endpoint->channel()->incoming()->buffer());
-            endpoint->channel()->send_message(RDMA_MESSAGE_ACK);
+            //endpoint->channel()->send_message(RDMA_MESSAGE_ACK);
+            send_message_to_channel(endpoint->channel(), RDMA_MESSAGE_ACK);
 
             RDMA_Buffer* buf = (RDMA_Buffer*)endpoint->find_in_table((uint64_t)msg.buffer_mr.remote_addr);
             delete buf;
@@ -85,7 +118,8 @@ void RDMA_Message::process_attached_message(ibv_wc &wc)
         case RDMA_MESSAGE_READ_REQUEST:
         {
             Message_Content msg = RDMA_Message::parse_message_content((char*)endpoint->channel()->incoming()->buffer());
-            endpoint->channel()->send_message(RDMA_MESSAGE_ACK);
+            //endpoint->channel()->send_message(RDMA_MESSAGE_ACK);
+            send_message_to_channel(endpoint->channel(), RDMA_MESSAGE_ACK);
 
             RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, endpoint->channel()->pd(), msg.buffer_size);
 
@@ -101,7 +135,7 @@ void RDMA_Message::process_attached_message(ibv_wc &wc)
     }
 }
 
-void RDMA_Message::process_immediate_message(ibv_wc &wc, Session_status &status, std::vector<RDMA_Endpoint*> &endpoint_list)
+void RDMA_Message::process_immediate_message(const ibv_wc &wc, Session_status &status, std::vector<RDMA_Endpoint*> &endpoint_list)
 {
     // Which RDMA_Endpoint get this message
     RDMA_Endpoint* endpoint = reinterpret_cast<RDMA_Endpoint*>(wc.wr_id);
@@ -121,7 +155,8 @@ void RDMA_Message::process_immediate_message(ibv_wc &wc, Session_status &status,
         case RDMA_MESSAGE_CLOSE:
         {
             for (auto endpoint: endpoint_list)
-                endpoint->channel()->send_message(RDMA_MESSAGE_TERMINATE);
+                //endpoint->channel()->send_message(RDMA_MESSAGE_TERMINATE);
+                send_message_to_channel(endpoint->channel(), RDMA_MESSAGE_TERMINATE);
             status = CLOSING;
             break;
         }
@@ -134,7 +169,7 @@ void RDMA_Message::process_immediate_message(ibv_wc &wc, Session_status &status,
     }
 }
 
-void RDMA_Message::process_write_success(ibv_wc &wc)
+void RDMA_Message::process_write_success(const ibv_wc &wc)
 {
     log_info(make_string("Message Write Success"));
     // Which RDMA_Channel send this message/data
@@ -144,14 +179,14 @@ void RDMA_Message::process_write_success(ibv_wc &wc)
     channel->release_local();
 }
 
-void RDMA_Message::process_send_success(ibv_wc &wc)
+void RDMA_Message::process_send_success(const ibv_wc &wc)
 {
     // Which RDMA_Channel send this message
     // RDMA_Channel* channel = reinterpret_cast<RDMA_Channel*>(wc_[i].wr_id);
     log_info(make_string("Message Send Success"));
 }
 
-void RDMA_Message::process_read_success(ibv_wc &wc)
+void RDMA_Message::process_read_success(const ibv_wc &wc)
 {
     RDMA_Buffer* rb = reinterpret_cast<RDMA_Buffer*>(wc.wr_id);
     char* temp = (char*)rb->buffer();
@@ -163,7 +198,8 @@ void RDMA_Message::process_read_success(ibv_wc &wc)
     //log_ok(make_string("RDMA Read: %d bytes, total %d bytes", rb->size(), endpoint->total_recv_data()));
 
     uint64_t res = endpoint->find_in_table((uint64_t)rb);
-    endpoint->channel()->send_message(RDMA_MESSAGE_READ_OVER, res);
+    //endpoint->channel()->send_message(RDMA_MESSAGE_READ_OVER, res);
+    send_message_to_channel(endpoint->channel(), RDMA_MESSAGE_READ_OVER, res);
 
     delete rb;
 }
