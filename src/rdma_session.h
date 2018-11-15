@@ -21,15 +21,11 @@ public:
     ~RDMA_Session();
 
     void stop_process();
+
     RDMA_Endpoint* new_endpoint(RDMA_Pre* pre);
 
     RDMA_Endpoint* ptp_connect(RDMA_Pre* pre);
     void daemon_connect(RDMA_Pre* pre);
-
-    // ----- Private To Public -----
-    inline ibv_pd* pd() const {return pd_;}
-    inline ibv_cq* cq() const {return cq_;}
-    inline ibv_context* context() const {return context_;}
 
     const static int CQ_SIZE = 1000;
 

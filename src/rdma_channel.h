@@ -44,17 +44,16 @@ public:
     void release_remote();
 
     // ----- Private To Public -----
-    inline ibv_pd* pd() const {return pd_;}
     inline RDMA_Buffer* incoming() const {return incoming_;}
     inline RDMA_Buffer* outgoing() const {return outgoing_;}
-    inline ThreadPool* work_pool() const {return work_pool_;}
 
     Buffer_MR remote_mr_;
 
 private:
 
     RDMA_Endpoint* endpoint_ = NULL;
-    ibv_pd* pd_;
+
+    // Queue pair
     ibv_qp* qp_;
 
     // Message incoming buffer, only read
@@ -68,6 +67,7 @@ private:
     // cv & mutex to lock the remote/local status
     std::mutex channel_cv_mutex_;
     std::condition_variable channel_cv_;
+
     // ThreadPool used for data process
     ThreadPool* work_pool_ = NULL;
     ThreadPool* unlock_pool_ = NULL;

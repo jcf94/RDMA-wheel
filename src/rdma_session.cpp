@@ -164,7 +164,7 @@ void RDMA_Session::stop_process()
 
 RDMA_Endpoint* RDMA_Session::new_endpoint(RDMA_Pre* pre)
 {
-    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(this, pre->config.ib_port);
+    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(pd_, cq_, context_, pre->config.ib_port, CQ_SIZE);
     endpoint_list_.push_back(new_endpoint);
     new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
 

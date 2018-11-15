@@ -115,7 +115,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc)
             Message_Content msg = RDMA_Message::parse_message_content((char*)endpoint->channel()->incoming()->buffer());
             send_message_to_channel(endpoint->channel(), RDMA_MESSAGE_ACK);
 
-            RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, endpoint->channel()->pd(), msg.buffer_size);
+            RDMA_Buffer* test_new = new RDMA_Buffer(endpoint, endpoint->pd(), msg.buffer_size);
 
             endpoint->insert_to_table((uint64_t)test_new, (uint64_t)msg.buffer_mr.remote_addr
             );

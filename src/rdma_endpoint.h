@@ -19,14 +19,13 @@ struct RDMA_Endpoint_Info
     uint32_t psn;
 };
 
-class RDMA_Session;
 class RDMA_Channel;
 class RDMA_Buffer;
 
 class RDMA_Endpoint
 {
 public:
-    RDMA_Endpoint(RDMA_Session* session, int ib_port);
+    RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size);
     ~RDMA_Endpoint();
 
     struct cm_con_data_t get_local_con_data();
@@ -44,6 +43,7 @@ public:
     void data_recv_success(int size);
 
     // ----- Private To Public -----
+    inline ibv_pd* pd() const {return pd_;}
     inline RDMA_Channel* channel() const {return channel_;}
     inline uint64_t total_send_data() const {return total_send_data_;}
     inline uint64_t total_recv_data() const {return total_recv_data_;}
@@ -57,9 +57,11 @@ private:
 
     int ib_port_;
 
-    RDMA_Session* session_ = NULL;
+    // Protection domain
+    ibv_pd* pd_;
     // Queue pair
     ibv_qp* qp_;
+
     // Endpoint info used for exchange with remote
     RDMA_Endpoint_Info self_, remote_;
     // Message channel

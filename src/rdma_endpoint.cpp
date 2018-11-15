@@ -11,10 +11,9 @@ PROG	: RDMA_ENDPOINT_CPP
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
 #include "rdma_channel.h"
-#include "rdma_session.h"
 
-RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
-    : session_(session), ib_port_(ib_port), connected_(false)
+RDMA_Endpoint::RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size)
+    : pd_(pd), ib_port_(ib_port), connected_(false)
 {
     // create the Queue Pair
     struct ibv_qp_init_attr qp_init_attr;
@@ -22,14 +21,14 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
 
     qp_init_attr.qp_type    = IBV_QPT_RC;
     // qp_init_attr.sq_sig_all = 1;
-    qp_init_attr.send_cq    = session_->cq();
-    qp_init_attr.recv_cq    = session_->cq();
-    qp_init_attr.cap.max_send_wr  = RDMA_Session::CQ_SIZE;
-    qp_init_attr.cap.max_recv_wr  = RDMA_Session::CQ_SIZE;
+    qp_init_attr.send_cq    = cq;
+    qp_init_attr.recv_cq    = cq;
+    qp_init_attr.cap.max_send_wr  = cq_size;
+    qp_init_attr.cap.max_recv_wr  = cq_size;
     qp_init_attr.cap.max_send_sge = 1;
     qp_init_attr.cap.max_recv_sge = 1;
     
-    qp_ = ibv_create_qp(session_->pd(), &qp_init_attr);
+    qp_ = ibv_create_qp(pd_, &qp_init_attr);
     if (!qp_)
     {
         log_error("failed to create QP");
@@ -42,7 +41,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
 
     // Local address
     struct ibv_port_attr attr;
-    if (ibv_query_port(session_->context(), ib_port_, &attr))
+    if (ibv_query_port(context, ib_port_, &attr))
     {
         log_error(make_string("ibv_query_port on port %u failed", ib_port_));
         return;
@@ -59,7 +58,7 @@ RDMA_Endpoint::RDMA_Endpoint(RDMA_Session* session, int ib_port)
     // // ACK Buffer ......
     // incoming_abuffer_ = new RDMA_Buffer(this, SIZE);
     // outgoing_abuffer_ = new RDMA_Buffer(this, SIZE);
-    channel_ = new RDMA_Channel(this, session_->pd(), qp_);
+    channel_ = new RDMA_Channel(this, pd_, qp_);
 
     // post recv
     for (int i=0;i<100;i++)
@@ -142,7 +141,7 @@ void RDMA_Endpoint::close()
 
 void RDMA_Endpoint::send_data(void* addr, int size)
 {
-    RDMA_Buffer* new_buffer = new RDMA_Buffer(this, session_->pd(), size, addr);
+    RDMA_Buffer* new_buffer = new RDMA_Buffer(this, pd_, size, addr);
     channel_->request_read(new_buffer);
 }
 

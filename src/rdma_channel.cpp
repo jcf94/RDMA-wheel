@@ -13,11 +13,11 @@ PROG	: RDMA_CHANNEL_CPP
 #include "../utils/ThreadPool/src/ThreadPool.h"
 
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
-    : endpoint_(endpoint), qp_(qp), pd_(pd), local_status_(IDLE), remote_status_(IDLE)
+    : endpoint_(endpoint), qp_(qp), local_status_(IDLE), remote_status_(IDLE)
 {
     // Create Message Buffer ......
-    incoming_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
-    outgoing_ = new RDMA_Buffer(endpoint, pd_, kMessageTotalBytes);
+    incoming_ = new RDMA_Buffer(endpoint, pd, kMessageTotalBytes);
+    outgoing_ = new RDMA_Buffer(endpoint, pd, kMessageTotalBytes);
 
     work_pool_ = new ThreadPool(DEFAULT_WORK_POOL_THREADS);
     if (work_pool_)
