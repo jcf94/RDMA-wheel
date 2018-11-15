@@ -50,6 +50,7 @@ public:
     void release_remote();
 
     // ----- Private To Public -----
+    inline ibv_pd* pd() const {return pd_;}
     inline RDMA_Endpoint* endpoint() const {return endpoint_;}
     inline RDMA_Buffer* incoming() const {return incoming_;}
     inline RDMA_Buffer* outgoing() const {return outgoing_;}
@@ -60,6 +61,8 @@ private:
 
     RDMA_Endpoint* endpoint_ = NULL;
 
+    // Protection domain
+    ibv_pd* pd_;
     // Queue pair
     ibv_qp* qp_;
 

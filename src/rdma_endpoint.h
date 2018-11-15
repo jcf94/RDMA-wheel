@@ -17,7 +17,6 @@ struct RDMA_Endpoint_Info
 };
 
 class RDMA_Channel;
-class RDMA_Buffer;
 
 class RDMA_Endpoint
 {
@@ -35,7 +34,6 @@ public:
     void data_recv_success(int size);
 
     // ----- Private To Public -----
-    inline ibv_pd* pd() const {return pd_;}
     inline RDMA_Channel* channel() const {return channel_;}
     inline uint64_t total_send_data() const {return total_send_data_;}
     inline uint64_t total_recv_data() const {return total_recv_data_;}

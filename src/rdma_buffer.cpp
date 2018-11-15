@@ -8,8 +8,8 @@ PROG	: RDMA_BUFFER_CPP
 
 #include "rdma_buffer.h"
 
-RDMA_Buffer::RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size)
-    : endpoint_(endpoint), size_(size), buffer_owned_(true)
+RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size)
+    : channel_(channel), size_(size), buffer_owned_(true)
 {
     buffer_ = malloc(size);
     mr_ = ibv_reg_mr(pd, buffer_, size_,
@@ -22,8 +22,8 @@ RDMA_Buffer::RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size)
     log_info("RDMA_Buffer Created");
 }
 
-RDMA_Buffer::RDMA_Buffer(RDMA_Endpoint* endpoint, ibv_pd* pd, int size, void* addr)
-    : buffer_(addr), endpoint_(endpoint), size_(size), buffer_owned_(false)
+RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr)
+    : buffer_(addr), channel_(channel), size_(size), buffer_owned_(false)
 {
     mr_ = ibv_reg_mr(pd, buffer_, size_,
         IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);

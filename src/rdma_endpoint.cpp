@@ -135,7 +135,7 @@ void RDMA_Endpoint::close()
 
 void RDMA_Endpoint::send_data(void* addr, int size)
 {
-    RDMA_Buffer* new_buffer = new RDMA_Buffer(this, pd_, size, addr);
+    RDMA_Buffer* new_buffer = new RDMA_Buffer(channel_, pd_, size, addr);
     channel_->request_read(new_buffer);
 }
 
