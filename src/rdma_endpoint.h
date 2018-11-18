@@ -34,7 +34,7 @@ public:
     bool data_recv_success(int size);
     void target_count_set(uint64_t size);
 
-    void prepare_to_sync(int size);
+    void set_sync_barrier(int size);
     void wait_for_sync();
 
     // ----- Private To Public -----

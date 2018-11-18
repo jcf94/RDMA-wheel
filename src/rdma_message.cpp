@@ -196,7 +196,6 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, Session_status &s
             std::lock_guard<std::mutex> lock(RDMA_Message::sync_cv_mutex);
             RDMA_Message::sync_flag = true;
             RDMA_Message::sync_cv.notify_one();
-            log_ok(make_string("notify on: %p", &RDMA_Message::sync_cv));
             break;
         }
         default:

@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 
             std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
 
-            endpoint->prepare_to_sync(total_data);
+            endpoint->set_sync_barrier(total_data);
 
             for (int i=0;i<total_data;i+=block_data)
             {

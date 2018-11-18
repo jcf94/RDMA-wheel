@@ -252,7 +252,7 @@ void RDMA_Endpoint::target_count_set(uint64_t size)
 
 // ----------------------------------------------
 
-void RDMA_Endpoint::prepare_to_sync(int size)
+void RDMA_Endpoint::set_sync_barrier(int size)
 {
     RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_SYNC_REQUEST, size);
 }
@@ -262,8 +262,6 @@ void RDMA_Endpoint::wait_for_sync()
     std::unique_lock<std::mutex> lock(RDMA_Message::sync_cv_mutex);
     if (!RDMA_Message::sync_flag)
     {
-        log_ok(make_string("wait on: %p", &RDMA_Message::sync_cv));
         RDMA_Message::sync_cv.wait(lock);
     }
-    log_ok("sync finish");
 }
