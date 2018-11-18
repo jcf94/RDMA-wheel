@@ -9,6 +9,8 @@ PROG   : RDMA_MESSAGE_H
 
 #include <vector>
 #include <string>
+#include <mutex>
+#include <condition_variable>
 #include <infiniband/verbs.h>
 
 enum Message_type                   // Use Immediate Number as message type
@@ -22,7 +24,10 @@ enum Message_type                   // Use Immediate Number as message type
     RDMA_MESSAGE_READ_REQUEST,      // addr, size, rkey
     RDMA_MESSAGE_READ_OVER,         // addr
 
-    RDMA_DATA                       // not a message, but memory data
+    RDMA_DATA,                      // not a message, but memory data
+
+    MESSAGE_BENCHMARK_START,        // Application message
+    MESSAGE_BENCHMARK_FINISH
 };
 
 struct Buffer_MR
@@ -73,6 +78,11 @@ void process_immediate_message(const ibv_wc &wc, Session_status &status, std::ve
 void process_write_success(const ibv_wc &wc);
 void process_send_success(const ibv_wc &wc);
 void process_read_success(const ibv_wc &wc);
+
+//TODO: It's not good to use global variable like this
+extern std::mutex sync_cv_mutex;
+extern std::condition_variable sync_cv;
+extern bool sync_flag;
 
 };
 

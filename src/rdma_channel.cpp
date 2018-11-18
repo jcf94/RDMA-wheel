@@ -62,6 +62,8 @@ RDMA_Channel::~RDMA_Channel()
     log_info("RDMA_Channel Deleted");
 }
 
+// ----------------------------------------------
+
 void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
     task_with_lock([this, buffer]
@@ -72,6 +74,8 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
         write(RDMA_MESSAGE_READ_REQUEST, kMessageTotalBytes);
     });
 }
+
+// ----------------------------------------------
 
 void RDMA_Channel::write(uint32_t imm_data, size_t size)
 {
@@ -166,6 +170,8 @@ void RDMA_Channel::read_data(RDMA_Buffer* buffer, Message_Content msg)
     }
 }
 
+// ----------------------------------------------
+
 uint64_t RDMA_Channel::find_in_table(uint64_t key, bool erase)
 {
     std::lock_guard<std::mutex> lock(map_lock_);
@@ -191,6 +197,8 @@ void RDMA_Channel::insert_to_table(uint64_t key, uint64_t value)
     //log_warning(make_string("Insert %p %p", key, value));
     map_table_.insert(std::make_pair(key, value));
 }
+
+// ----------------------------------------------
 
 void RDMA_Channel::task_with_lock(std::function<void()> task)
 {

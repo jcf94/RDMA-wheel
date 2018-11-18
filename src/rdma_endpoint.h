@@ -32,6 +32,10 @@ public:
 
     void data_send_success(int size);
     void data_recv_success(int size);
+    void recv_count_reset();
+
+    void start_benchmark();
+    void wait_for_sync();
 
     // ----- Private To Public -----
     inline RDMA_Channel* channel() const {return channel_;}

@@ -75,6 +75,8 @@ RDMA_Endpoint::~RDMA_Endpoint()
     log_info("RDMA_Endpoint Deleted");
 }
 
+// ----------------------------------------------
+
 cm_con_data_t RDMA_Endpoint::get_local_con_data()
 {
     cm_con_data_t local_con_data;
@@ -133,11 +135,15 @@ void RDMA_Endpoint::close()
     }
 }
 
+// ----------------------------------------------
+
 void RDMA_Endpoint::send_data(void* addr, int size)
 {
     RDMA_Buffer* new_buffer = new RDMA_Buffer(channel_, pd_, size, addr);
     channel_->request_read(new_buffer);
 }
+
+// ----------------------------------------------
 
 int RDMA_Endpoint::modify_qp_to_init()
 {
@@ -224,6 +230,8 @@ int RDMA_Endpoint::modify_qp_to_rts()
     return 0;
 }
 
+// ----------------------------------------------
+
 void RDMA_Endpoint::data_send_success(int size)
 {
     total_send_data_ += size;
@@ -232,4 +240,27 @@ void RDMA_Endpoint::data_send_success(int size)
 void RDMA_Endpoint::data_recv_success(int size)
 {
     total_recv_data_ += size;
+}
+
+void RDMA_Endpoint::recv_count_reset()
+{
+    total_recv_data_ = 0;
+}
+
+// ----------------------------------------------
+
+void RDMA_Endpoint::start_benchmark()
+{
+    RDMA_Message::send_message_to_channel(channel_, MESSAGE_BENCHMARK_START);
+}
+
+void RDMA_Endpoint::wait_for_sync()
+{
+    std::unique_lock<std::mutex> lock(RDMA_Message::sync_cv_mutex);
+    if (!RDMA_Message::sync_flag)
+    {
+        log_ok(make_string("wait on: %p", &RDMA_Message::sync_cv));
+        RDMA_Message::sync_cv.wait(lock);
+    }
+    log_ok("sync finish");
 }

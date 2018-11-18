@@ -16,6 +16,7 @@ PROG   : benchmark
 #include "src/rdma_session.h"
 #include "src/rdma_endpoint.h"
 #include "src/tcp_sock_pre.h"
+#include "src/rdma_message.h"
 
 using namespace std;
 
@@ -55,11 +56,12 @@ int main(int argc, char* argv[])
 
         if (strcmp(argv[1], "s") == 0)
         {
-            while (endpoint->total_recv_data() < total_data*2)
+            while (endpoint->total_recv_data() < total_data)
             {
                 //log_ok(endpoint->total_recv_data());
                 this_thread::sleep_for(10ms);
             }
+            RDMA_Message::send_message_to_channel(endpoint->channel(), MESSAGE_BENCHMARK_FINISH);
             log_ok("recv over");
             //endpoint->close();
         } else if (strcmp(argv[1], "c") == 0)
@@ -77,17 +79,21 @@ int main(int argc, char* argv[])
 
             std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
 
+            endpoint->start_benchmark();
+
             for (int i=0;i<total_data;i+=block_data)
             {
                 endpoint->send_data((void*)(test_data+i), block_data);
             }
+
+            endpoint->wait_for_sync();
 
             std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
             log_ok(make_string("Send Over, Total %lld Bytes with Block size %lld Bytes", total_data, block_data));
             log_ok(make_string("Total Time used: %lld ms, Bandwidth: %lf MB/s", duration, (double)(total_data / MB) / duration * 1000));
 
-            //endpoint->close();
+            endpoint->close();
         }
     }
     

@@ -11,6 +11,10 @@ PROG   : RDMA_MESSAGE_CPP
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
 
+std::mutex RDMA_Message::sync_cv_mutex;
+std::condition_variable RDMA_Message::sync_cv;
+bool RDMA_Message::sync_flag = false;
+
 std::string RDMA_Message::get_message(Message_type msgt)
 {
     switch(msgt)
@@ -36,6 +40,17 @@ std::string RDMA_Message::get_message(Message_type msgt)
             break;
         case RDMA_MESSAGE_READ_OVER:
             return "RDMA_MESSAGE_READ_OVER";
+            break;
+
+        case RDMA_DATA:
+            return "RDMA_DATA";
+            break;
+
+        case MESSAGE_BENCHMARK_START:
+            return "MESSAGE_BENCHMARK_START";
+            break;
+        case MESSAGE_BENCHMARK_FINISH:
+            return "MESSAGE_BENCHMARK_FINISH";
             break;
 
         default:
@@ -69,6 +84,8 @@ void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type m
         case RDMA_MESSAGE_ACK:
         case RDMA_MESSAGE_CLOSE:
         case RDMA_MESSAGE_TERMINATE:
+        case MESSAGE_BENCHMARK_START:
+        case MESSAGE_BENCHMARK_FINISH:
         {
             channel->send(msgt, 0);
             break;
@@ -154,9 +171,24 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, Session_status &s
             break;
         }
         case RDMA_MESSAGE_TERMINATE:
+        {
             status = CLOSED;
             channel->endpoint()->connected_ = false;
             break;
+        }
+        case MESSAGE_BENCHMARK_START:
+        {
+            channel->endpoint()->recv_count_reset();
+            break;
+        }
+        case MESSAGE_BENCHMARK_FINISH:
+        {
+            std::lock_guard<std::mutex> lock(RDMA_Message::sync_cv_mutex);
+            RDMA_Message::sync_flag = true;
+            RDMA_Message::sync_cv.notify_one();
+            log_ok(make_string("notify on: %p", &RDMA_Message::sync_cv));
+            break;
+        }
         default:
             log_error("Unsupported Message Type");
     }
