@@ -15,6 +15,26 @@ std::mutex RDMA_Message::sync_cv_mutex;
 std::condition_variable RDMA_Message::sync_cv;
 bool RDMA_Message::sync_flag = false;
 
+void RDMA_Message::fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr)
+{
+    memcpy(&target[kBufferSizeStartIndex], &(size), sizeof(size));
+    memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
+    if (mr) memcpy(&target[kRkeyStartIndex], &(mr->rkey), sizeof(mr->rkey));
+}
+
+Message_Content RDMA_Message::parse_message_content(char* content)
+{
+    Message_Content msg;
+
+    memcpy(&(msg.buffer_size), &content[kBufferSizeStartIndex], 8);
+    memcpy(&(msg.buffer_mr.remote_addr), &content[kRemoteAddrStartIndex], 8);
+    memcpy(&(msg.buffer_mr.rkey), &content[kRkeyStartIndex], 4);
+
+    return msg;
+}
+
+// --------------------- Message Content ---------------------
+
 std::string RDMA_Message::get_message(Message_type msgt)
 {
     switch(msgt)
@@ -57,24 +77,7 @@ std::string RDMA_Message::get_message(Message_type msgt)
     }
 }
 
-void RDMA_Message::fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr)
-{
-    memcpy(&target[kBufferSizeStartIndex], &(size), sizeof(size));
-    memcpy(&target[kRemoteAddrStartIndex], &(addr), sizeof(addr));
-    if (mr) memcpy(&target[kRkeyStartIndex], &(mr->rkey), sizeof(mr->rkey));
-}
-
-Message_Content RDMA_Message::parse_message_content(char* content)
-{
-    Message_Content msg;
-
-    memcpy(&(msg.buffer_size), &content[kBufferSizeStartIndex], 8);
-    memcpy(&(msg.buffer_mr.remote_addr), &content[kRemoteAddrStartIndex], 8);
-    memcpy(&(msg.buffer_mr.rkey), &content[kRkeyStartIndex], 4);
-
-    return msg;
-}
-
+// --------------------- Message Send ---------------------
 
 void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type msgt, uint64_t data)
 {
@@ -129,7 +132,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc)
             Message_Content msg = RDMA_Message::parse_message_content((char*)channel->incoming()->buffer());
             send_message_to_channel(channel, RDMA_MESSAGE_ACK);
 
-            channel->endpoint()->target_count_set(msg.buffer_size);
+            channel->target_count_set(msg.buffer_size);
             break;
         }
         case RDMA_MESSAGE_READ_OVER:
@@ -203,6 +206,8 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, Session_status &s
     }
 }
 
+// --------------------- RDMA Operation Success ---------------------
+
 void RDMA_Message::process_write_success(const ibv_wc &wc)
 {
     log_info(make_string("Message Write Success"));
@@ -228,7 +233,7 @@ void RDMA_Message::process_read_success(const ibv_wc &wc)
     
     RDMA_Channel* channel = rb->channel();
 
-    if (channel->endpoint()->data_recv_success(rb->size()))
+    if (channel->data_recv_success(rb->size()))
     {
         log_ok("recv over");
         send_message_to_channel(channel, RDMA_MESSAGE_SYNC_ACK);

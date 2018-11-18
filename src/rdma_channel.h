@@ -32,6 +32,8 @@ struct Buffer_MR;
 class RDMA_Channel      // Responsible for RDMA low level data transform
 {
 public:
+    friend class RDMA_Endpoint;
+
     RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp);
     ~RDMA_Channel();
 
@@ -41,6 +43,9 @@ public:
     void send(uint32_t imm_data, size_t size);
     void recv();
     void read_data(RDMA_Buffer* buffer, struct Message_Content msg);
+
+    bool data_recv_success(int size);
+    void target_count_set(uint64_t size);
 
     uint64_t find_in_table(uint64_t key, bool erase = true);
     void insert_to_table(uint64_t key, uint64_t value);
@@ -84,6 +89,10 @@ private:
     // ThreadPool used for data process
     ThreadPool* work_pool_ = NULL;
     ThreadPool* unlock_pool_ = NULL;
+
+    //Data count
+    uint64_t total_recv_data_ = 0;
+    uint64_t target_recv_data_ = 0;
 };
 
 #endif // !RDMA_CHANNEL_H

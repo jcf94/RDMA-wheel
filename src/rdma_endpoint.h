@@ -29,18 +29,11 @@ public:
     void close();
 
     void send_data(void* addr, int size);
-
-    void data_send_success(int size);
-    bool data_recv_success(int size);
-    void target_count_set(uint64_t size);
-
     void set_sync_barrier(int size);
     void wait_for_sync();
 
     // ----- Private To Public -----
     inline RDMA_Channel* channel() const {return channel_;}
-    inline uint64_t total_send_data() const {return total_send_data_;}
-    inline uint64_t total_recv_data() const {return total_recv_data_;}
 
     bool connected_;
 
@@ -60,11 +53,6 @@ private:
     RDMA_Endpoint_Info self_, remote_;
     // Message channel
     RDMA_Channel* channel_ = NULL;
-
-    //Data count
-    uint64_t total_send_data_ = 0;
-    uint64_t total_recv_data_ = 0;
-    uint64_t target_recv_data_ = 0;
 };
 
 #endif // !RDMA_ENDPOINT_H

@@ -172,6 +172,20 @@ void RDMA_Channel::read_data(RDMA_Buffer* buffer, Message_Content msg)
 
 // ----------------------------------------------
 
+bool RDMA_Channel::data_recv_success(int size)
+{
+    total_recv_data_ += size;
+    return total_recv_data_ == target_recv_data_;
+}
+
+void RDMA_Channel::target_count_set(uint64_t size)
+{
+    total_recv_data_ = 0;
+    target_recv_data_ = size;
+}
+
+// ----------------------------------------------
+
 uint64_t RDMA_Channel::find_in_table(uint64_t key, bool erase)
 {
     std::lock_guard<std::mutex> lock(map_lock_);

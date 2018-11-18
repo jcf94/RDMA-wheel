@@ -232,26 +232,6 @@ int RDMA_Endpoint::modify_qp_to_rts()
 
 // ----------------------------------------------
 
-void RDMA_Endpoint::data_send_success(int size)
-{
-    total_send_data_ += size;
-}
-
-bool RDMA_Endpoint::data_recv_success(int size)
-{
-    total_recv_data_ += size;
-    return total_recv_data_ == target_recv_data_;
-}
-
-void RDMA_Endpoint::target_count_set(uint64_t size)
-{
-    //log_ok(total_recv_data_);
-    total_recv_data_ = 0;
-    target_recv_data_ = size;
-}
-
-// ----------------------------------------------
-
 void RDMA_Endpoint::set_sync_barrier(int size)
 {
     RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_SYNC_REQUEST, size);
