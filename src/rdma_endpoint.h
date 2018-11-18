@@ -31,10 +31,10 @@ public:
     void send_data(void* addr, int size);
 
     void data_send_success(int size);
-    void data_recv_success(int size);
-    void recv_count_reset();
+    bool data_recv_success(int size);
+    void target_count_set(uint64_t size);
 
-    void start_benchmark();
+    void prepare_to_sync(int size);
     void wait_for_sync();
 
     // ----- Private To Public -----
@@ -64,6 +64,7 @@ private:
     //Data count
     uint64_t total_send_data_ = 0;
     uint64_t total_recv_data_ = 0;
+    uint64_t target_recv_data_ = 0;
 };
 
 #endif // !RDMA_ENDPOINT_H

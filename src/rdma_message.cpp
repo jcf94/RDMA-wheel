@@ -28,7 +28,13 @@ std::string RDMA_Message::get_message(Message_type msgt)
         case RDMA_MESSAGE_TERMINATE:
             return "RDMA_MESSAGE_TERMINATE";
             break;
+        case RDMA_MESSAGE_SYNC_ACK:
+            return "RDMA_MESSAGE_SYNC_ACK";
+            break;
 
+        case RDMA_MESSAGE_SYNC_REQUEST:
+            return "RDMA_MESSAGE_SYNC_REQUEST";
+            break;
         case RDMA_MESSAGE_WRITE_REQUEST:
             return "RDMA_MESSAGE_WRITE_REQUEST";
             break;
@@ -44,13 +50,6 @@ std::string RDMA_Message::get_message(Message_type msgt)
 
         case RDMA_DATA:
             return "RDMA_DATA";
-            break;
-
-        case MESSAGE_BENCHMARK_START:
-            return "MESSAGE_BENCHMARK_START";
-            break;
-        case MESSAGE_BENCHMARK_FINISH:
-            return "MESSAGE_BENCHMARK_FINISH";
             break;
 
         default:
@@ -77,24 +76,32 @@ Message_Content RDMA_Message::parse_message_content(char* content)
 }
 
 
-void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type msgt, uint64_t addr)
+void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type msgt, uint64_t data)
 {
     switch(msgt)
     {
         case RDMA_MESSAGE_ACK:
         case RDMA_MESSAGE_CLOSE:
         case RDMA_MESSAGE_TERMINATE:
-        case MESSAGE_BENCHMARK_START:
-        case MESSAGE_BENCHMARK_FINISH:
+        case RDMA_MESSAGE_SYNC_ACK:
         {
             channel->send(msgt, 0);
             break;
         }
+        case RDMA_MESSAGE_SYNC_REQUEST:
+        {
+            channel->task_with_lock([channel, msgt, data]
+            {
+                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), 0, data, NULL);
+                channel->write(msgt, kBufferSizeEndIndex);
+            });
+            break;
+        }
         case RDMA_MESSAGE_READ_OVER:
         {
-            channel->task_with_lock([channel, msgt, addr]
+            channel->task_with_lock([channel, msgt, data]
             {
-                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), (void*)addr, kRemoteAddrEndIndex, NULL);
+                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), (void*)data, kRemoteAddrEndIndex, NULL);
                 channel->write(msgt, kRemoteAddrEndIndex);
             });
             break;
@@ -117,6 +124,14 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc)
     log_info(make_string("Message Recv: %s", RDMA_Message::get_message(msgt).data()));
     switch(msgt)
     {
+        case RDMA_MESSAGE_SYNC_REQUEST:
+        {
+            Message_Content msg = RDMA_Message::parse_message_content((char*)channel->incoming()->buffer());
+            send_message_to_channel(channel, RDMA_MESSAGE_ACK);
+
+            channel->endpoint()->target_count_set(msg.buffer_size);
+            break;
+        }
         case RDMA_MESSAGE_READ_OVER:
         {
             Message_Content msg = RDMA_Message::parse_message_content((char*)channel->incoming()->buffer());
@@ -176,12 +191,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, Session_status &s
             channel->endpoint()->connected_ = false;
             break;
         }
-        case MESSAGE_BENCHMARK_START:
-        {
-            channel->endpoint()->recv_count_reset();
-            break;
-        }
-        case MESSAGE_BENCHMARK_FINISH:
+        case RDMA_MESSAGE_SYNC_ACK:
         {
             std::lock_guard<std::mutex> lock(RDMA_Message::sync_cv_mutex);
             RDMA_Message::sync_flag = true;
@@ -219,7 +229,11 @@ void RDMA_Message::process_read_success(const ibv_wc &wc)
     
     RDMA_Channel* channel = rb->channel();
 
-    channel->endpoint()->data_recv_success(rb->size());
+    if (channel->endpoint()->data_recv_success(rb->size()))
+    {
+        log_ok("recv over");
+        send_message_to_channel(channel, RDMA_MESSAGE_SYNC_ACK);
+    }
     //log_ok(make_string("RDMA Read: %d bytes, total %d bytes", rb->size(), endpoint->total_recv_data()));
 
     uint64_t res = channel->find_in_table((uint64_t)rb);

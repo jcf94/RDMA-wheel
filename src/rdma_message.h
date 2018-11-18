@@ -18,16 +18,15 @@ enum Message_type                   // Use Immediate Number as message type
     RDMA_MESSAGE_ACK,               // no extra data
     RDMA_MESSAGE_CLOSE,             // no extra data
     RDMA_MESSAGE_TERMINATE,         // no extra data
+    RDMA_MESSAGE_SYNC_ACK,
 
+    RDMA_MESSAGE_SYNC_REQUEST,
     RDMA_MESSAGE_WRITE_REQUEST,     // addr(map key), size
     RDMA_MESSAGE_WRITE_READY,       // addr, size, rkey
     RDMA_MESSAGE_READ_REQUEST,      // addr, size, rkey
     RDMA_MESSAGE_READ_OVER,         // addr
 
-    RDMA_DATA,                      // not a message, but memory data
-
-    MESSAGE_BENCHMARK_START,        // Application message
-    MESSAGE_BENCHMARK_FINISH
+    RDMA_DATA                       // not a message, but memory data
 };
 
 struct Buffer_MR
@@ -71,7 +70,7 @@ std::string get_message(Message_type msgt);
 
 void fill_message_content(char* target, void* addr, uint64_t size, ibv_mr* mr);
 Message_Content parse_message_content(char* content);
-void send_message_to_channel(RDMA_Channel* channel, Message_type msgt, uint64_t addr = 0);
+void send_message_to_channel(RDMA_Channel* channel, Message_type msgt, uint64_t data = 0);
 
 void process_attached_message(const ibv_wc &wc);
 void process_immediate_message(const ibv_wc &wc, Session_status &status, std::vector<RDMA_Endpoint*> &endpoint_list);

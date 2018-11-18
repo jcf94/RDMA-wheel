@@ -237,21 +237,24 @@ void RDMA_Endpoint::data_send_success(int size)
     total_send_data_ += size;
 }
 
-void RDMA_Endpoint::data_recv_success(int size)
+bool RDMA_Endpoint::data_recv_success(int size)
 {
     total_recv_data_ += size;
+    return total_recv_data_ == target_recv_data_;
 }
 
-void RDMA_Endpoint::recv_count_reset()
+void RDMA_Endpoint::target_count_set(uint64_t size)
 {
+    //log_ok(total_recv_data_);
     total_recv_data_ = 0;
+    target_recv_data_ = size;
 }
 
 // ----------------------------------------------
 
-void RDMA_Endpoint::start_benchmark()
+void RDMA_Endpoint::prepare_to_sync(int size)
 {
-    RDMA_Message::send_message_to_channel(channel_, MESSAGE_BENCHMARK_START);
+    RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_SYNC_REQUEST, size);
 }
 
 void RDMA_Endpoint::wait_for_sync()

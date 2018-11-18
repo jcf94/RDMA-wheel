@@ -56,30 +56,23 @@ int main(int argc, char* argv[])
 
         if (strcmp(argv[1], "s") == 0)
         {
-            while (endpoint->total_recv_data() < total_data)
-            {
-                //log_ok(endpoint->total_recv_data());
-                this_thread::sleep_for(10ms);
-            }
-            RDMA_Message::send_message_to_channel(endpoint->channel(), MESSAGE_BENCHMARK_FINISH);
-            log_ok("recv over");
-            //endpoint->close();
+
         } else if (strcmp(argv[1], "c") == 0)
         {
             char* test_data = (char*)malloc(total_data);
 
             // Warm Up
 
-            for (int i=0;i<total_data;i+=block_data)
-            {
-                endpoint->send_data((void*)(test_data+i), block_data);
-            }
+            // for (int i=0;i<total_data;i+=block_data)
+            // {
+            //     endpoint->send_data((void*)(test_data+i), block_data);
+            // }
 
             // Test Start
 
             std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
 
-            endpoint->start_benchmark();
+            endpoint->prepare_to_sync(total_data);
 
             for (int i=0;i<total_data;i+=block_data)
             {
