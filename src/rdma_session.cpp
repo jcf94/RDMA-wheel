@@ -95,6 +95,60 @@ RDMA_Session::~RDMA_Session()
     log_info("RDMA_Session Deleted");
 }
 
+// ----------------------------------------------
+
+void RDMA_Session::stop_process()
+{
+    process_thread_->join();
+}
+
+// ----------------------------------------------
+
+RDMA_Endpoint* RDMA_Session::new_endpoint(RDMA_Pre* pre)
+{
+    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(pd_, cq_, context_, pre->config.ib_port, CQ_SIZE);
+    endpoint_list_.push_back(new_endpoint);
+    new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
+
+    return new_endpoint;
+}
+
+void RDMA_Session::delete_endpoint(RDMA_Endpoint* endpoint)
+{
+    std::vector<RDMA_Endpoint*>::iterator begin = endpoint_list_.begin();
+    std::vector<RDMA_Endpoint*>::iterator end = endpoint_list_.end();
+
+    for (auto i=begin;i!=end;++i)
+    if (*i == endpoint)
+    {
+        endpoint_list_.erase(i);
+        break;
+    }
+
+    // if (endpoint_list_.empty())
+    // {
+    //     //status_ = CLOSED;
+    // }
+}
+
+// ----------------------------------------------
+
+RDMA_Endpoint* RDMA_Session::ptp_connect(RDMA_Pre* pre)
+{
+    pre->ptp_connect();
+
+    return new_endpoint(pre);
+}
+
+void RDMA_Session::daemon_connect(RDMA_Pre* pre)
+{
+    pre_ = pre;
+    std::function<void()> func = std::bind(&RDMA_Session::new_endpoint, this, pre);
+    pre->daemon_connect(func);
+}
+
+// ----------------------------------------------
+
 int RDMA_Session::open_ib_device()
 {
     int i, num_devices;
@@ -157,40 +211,10 @@ int RDMA_Session::open_ib_device()
     return 0;
 }
 
-void RDMA_Session::stop_process()
-{
-    process_thread_->join();
-}
-
-RDMA_Endpoint* RDMA_Session::new_endpoint(RDMA_Pre* pre)
-{
-    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(pd_, cq_, context_, pre->config.ib_port, CQ_SIZE);
-    endpoint_list_.push_back(new_endpoint);
-    new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
-
-    return new_endpoint;
-}
-
-RDMA_Endpoint* RDMA_Session::ptp_connect(RDMA_Pre* pre)
-{
-    pre->ptp_connect();
-
-    return new_endpoint(pre);
-}
-
-void RDMA_Session::daemon_connect(RDMA_Pre* pre)
-{
-    pre_ = pre;
-    std::function<void()> func = std::bind(&RDMA_Session::new_endpoint, this, pre);
-    pre->daemon_connect(func);
-}
-
-// -----------------------------------
-
 void RDMA_Session::session_processCQ()
 {
-    Session_status status = WORK;
-    while (status != CLOSED)
+    status_ = WORK;
+    while (status_ != CLOSED)
     {
         ibv_cq* cq;
         void* cq_context;
@@ -231,36 +255,22 @@ void RDMA_Session::session_processCQ()
             switch(wc_[i].opcode)
             {
                 case IBV_WC_RECV_RDMA_WITH_IMM: // Recv Remote RDMA Write Message
-                {
-                    if (status != WORK) continue;
-
-                    RDMA_Message::process_attached_message(wc_[i]);
+                    RDMA_Message::process_attached_message(wc_[i], this);
                     break;
-                }
                 case IBV_WC_RECV:       // Recv Remote RDMA Send Message
-                {
-                    RDMA_Message::process_immediate_message(wc_[i], status, endpoint_list_);
+                    RDMA_Message::process_immediate_message(wc_[i], this);
                     break;
-                }
                 case IBV_WC_RDMA_WRITE: // Successfully Write RDMA Message or Data
-                {
-                    RDMA_Message::process_write_success(wc_[i]);
+                    RDMA_Message::process_write_success(wc_[i], this);
                     break;
-                }
                 case IBV_WC_SEND:       // Successfully Send RDMA Message
-                {
-                    RDMA_Message::process_send_success(wc_[i]);
+                    RDMA_Message::process_send_success(wc_[i], this);
                     break;
-                }
                 case IBV_WC_RDMA_READ:  // Successfully Read RDMA Data
-                {
-                    RDMA_Message::process_read_success(wc_[i]);
+                    RDMA_Message::process_read_success(wc_[i], this);
                     break;
-                }
                 default:
-                {
                     log_error("Unsupported opcode");
-                }
             }
         }
     }

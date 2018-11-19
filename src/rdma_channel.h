@@ -4,6 +4,10 @@ LANG	: G++
 PROG	: RDMA_CHANNEL_H
 ************************************************ */
 
+// class RDMA_Channel
+// 
+// Responsible for RDMA low level data transform
+
 #ifndef RDMA_CHANNEL_H
 #define RDMA_CHANNEL_H
 
@@ -29,12 +33,10 @@ class ThreadPool;
 
 struct Buffer_MR;
 
-class RDMA_Channel      // Responsible for RDMA low level data transform
+class RDMA_Channel
 {
 public:
-    friend class RDMA_Endpoint;
-
-    RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp);
+    explicit RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp);
     ~RDMA_Channel();
 
     void request_read(RDMA_Buffer* buffer);
@@ -53,6 +55,7 @@ public:
     void task_with_lock(std::function<void()> task);
     void release_local();
     void release_remote();
+    bool work_pool_clear();
 
     // ----- Private To Public -----
     inline ibv_pd* pd() const {return pd_;}

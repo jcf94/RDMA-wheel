@@ -71,7 +71,6 @@ int main(int argc, char* argv[])
             // Test Start
 
             std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
-
             endpoint->set_sync_barrier(total_data);
 
             for (int i=0;i<total_data;i+=block_data)
@@ -80,8 +79,8 @@ int main(int argc, char* argv[])
             }
 
             endpoint->wait_for_sync();
-
             std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
+
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
             log_ok(make_string("Send Over, Total %lld Bytes with Block size %lld Bytes", total_data, block_data));
             log_ok(make_string("Total Time used: %lld ms, Bandwidth: %lf MB/s", duration, (double)(total_data / MB) / duration * 1000));

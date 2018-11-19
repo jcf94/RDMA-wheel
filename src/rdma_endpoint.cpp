@@ -127,8 +127,6 @@ void RDMA_Endpoint::close()
     if (connected_)
     {
         RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_CLOSE);
-        RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_TERMINATE);
-        connected_ = false;
     } else
     {
         log_warning("Endpoint Already Closed");
@@ -137,10 +135,52 @@ void RDMA_Endpoint::close()
 
 // ----------------------------------------------
 
-void RDMA_Endpoint::send_data(void* addr, int size)
+RDMA_Buffer* RDMA_Endpoint::register_buffer(int size, void* addr)
 {
     RDMA_Buffer* new_buffer = new RDMA_Buffer(channel_, pd_, size, addr);
-    channel_->request_read(new_buffer);
+    extra_buffer_set_.insert(new_buffer);
+    return new_buffer;
+}
+
+void RDMA_Endpoint::release_buffer(RDMA_Buffer* buffer)
+{
+    std::multiset<RDMA_Buffer*>::iterator target = extra_buffer_set_.find(buffer);
+    if (target != extra_buffer_set_.end())
+    {
+        delete (*target);
+        extra_buffer_set_.erase(target);
+    } else
+    {
+        log_error("Extra Buffer not found");
+    }
+}
+
+int RDMA_Endpoint::buffer_set_size()
+{
+    return extra_buffer_set_.size();
+}
+
+// ----------------------------------------------
+
+void RDMA_Endpoint::send_data(void* addr, int size)
+{
+    channel_->request_read(register_buffer(size, addr));
+}
+
+// ----------------------------------------------
+
+void RDMA_Endpoint::set_sync_barrier(int size)
+{
+    RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_SYNC_REQUEST, size);
+}
+
+void RDMA_Endpoint::wait_for_sync()
+{
+    std::unique_lock<std::mutex> lock(RDMA_Message::sync_cv_mutex);
+    if (!RDMA_Message::sync_flag)
+    {
+        RDMA_Message::sync_cv.wait(lock);
+    }
 }
 
 // ----------------------------------------------
@@ -228,20 +268,4 @@ int RDMA_Endpoint::modify_qp_to_rts()
     }
 
     return 0;
-}
-
-// ----------------------------------------------
-
-void RDMA_Endpoint::set_sync_barrier(int size)
-{
-    RDMA_Message::send_message_to_channel(channel_, RDMA_MESSAGE_SYNC_REQUEST, size);
-}
-
-void RDMA_Endpoint::wait_for_sync()
-{
-    std::unique_lock<std::mutex> lock(RDMA_Message::sync_cv_mutex);
-    if (!RDMA_Message::sync_flag)
-    {
-        RDMA_Message::sync_cv.wait(lock);
-    }
 }

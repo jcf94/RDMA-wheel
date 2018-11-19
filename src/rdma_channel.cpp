@@ -246,3 +246,8 @@ void RDMA_Channel::release_remote()
         channel_cv_.notify_one();
     });
 }
+
+bool RDMA_Channel::work_pool_clear()
+{
+    return work_pool_->tasks_in_queue() == 0;
+}

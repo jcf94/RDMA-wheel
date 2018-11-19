@@ -4,9 +4,14 @@ LANG	: G++
 PROG	: RDMA_ENDPOINT_H
 ************************************************ */
 
+// class RDMA_Endpoint
+// 
+// Responsible for connection establishment, hide RDMA low level details in Channel
+
 #ifndef RDMA_ENDPOINT_H
 #define RDMA_ENDPOINT_H
 
+#include <set>
 #include <infiniband/verbs.h>
 
 struct RDMA_Endpoint_Info
@@ -17,18 +22,24 @@ struct RDMA_Endpoint_Info
 };
 
 class RDMA_Channel;
+class RDMA_Buffer;
 
-class RDMA_Endpoint     // Responsible for connection establishment, hide RDMA low level details in Channel
+class RDMA_Endpoint
 {
 public:
-    RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size);
+    explicit RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size);
     ~RDMA_Endpoint();
 
     struct cm_con_data_t get_local_con_data();
     void connect(struct cm_con_data_t remote_con_data);
     void close();
 
+    RDMA_Buffer* register_buffer(int size, void* addr = NULL);
+    void release_buffer(RDMA_Buffer* buffer);
+    int buffer_set_size();
+
     void send_data(void* addr, int size);
+
     void set_sync_barrier(int size);
     void wait_for_sync();
 
@@ -53,6 +64,8 @@ private:
     RDMA_Endpoint_Info self_, remote_;
     // Message channel
     RDMA_Channel* channel_ = NULL;
+    // Extra buffer list
+    std::multiset<RDMA_Buffer*> extra_buffer_set_;
 };
 
 #endif // !RDMA_ENDPOINT_H

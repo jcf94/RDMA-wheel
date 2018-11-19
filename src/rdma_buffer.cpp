@@ -8,23 +8,18 @@ PROG	: RDMA_BUFFER_CPP
 
 #include "rdma_buffer.h"
 
-RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size)
-    : channel_(channel), size_(size), buffer_owned_(true)
-{
-    buffer_ = malloc(size);
-    mr_ = ibv_reg_mr(pd, buffer_, size_,
-        IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);
-    if (!mr_)
-    {
-        log_error("Failed to register memory region");
-    }
-
-    log_info("RDMA_Buffer Created");
-}
-
 RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr)
-    : buffer_(addr), channel_(channel), size_(size), buffer_owned_(false)
+    : channel_(channel), size_(size)
 {
+    if (addr)
+    {
+        buffer_ = addr;
+        buffer_owned_ = false;
+    } else
+    {
+        buffer_ = malloc(size);
+        buffer_owned_ = true;
+    }
     mr_ = ibv_reg_mr(pd, buffer_, size_,
         IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);
     if (!mr_)
