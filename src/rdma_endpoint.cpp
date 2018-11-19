@@ -4,11 +4,11 @@ LANG	: G++
 PROG	: RDMA_ENDPOINT_CPP
 ************************************************ */
 
+#include "rdma_endpoint.h"
+
 #include <netdb.h>
 #include "rdma_util.h"
-
 #include "rdma_message.h"
-#include "rdma_endpoint.h"
 #include "rdma_buffer.h"
 #include "rdma_channel.h"
 

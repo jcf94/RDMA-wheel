@@ -11,9 +11,9 @@ PROG	: RDMA_SESSION_H
 #ifndef RDMA_SESSION_H
 #define RDMA_SESSION_H
 
+#include <infiniband/verbs.h>
 #include <thread>
 #include <vector>
-#include <infiniband/verbs.h>
 
 class RDMA_Endpoint;
 class RDMA_Pre;

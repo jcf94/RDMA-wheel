@@ -7,10 +7,10 @@ PROG   : RDMA_MESSAGE_H
 #ifndef RDMA_MESSAGE_H
 #define RDMA_MESSAGE_H
 
+#include <infiniband/verbs.h>
 #include <string>
 #include <mutex>
 #include <condition_variable>
-#include <infiniband/verbs.h>
 
 enum Message_type                   // Use Immediate Number as message type
 {

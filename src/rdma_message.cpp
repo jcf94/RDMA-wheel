@@ -4,9 +4,9 @@ LANG   : G++
 PROG   : RDMA_MESSAGE_CPP
 ************************************************ */
 
-#include "rdma_util.h"
-
 #include "rdma_message.h"
+
+#include "rdma_util.h"
 #include "rdma_channel.h"
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"

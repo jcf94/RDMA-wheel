@@ -11,8 +11,8 @@ PROG	: RDMA_ENDPOINT_H
 #ifndef RDMA_ENDPOINT_H
 #define RDMA_ENDPOINT_H
 
-#include <set>
 #include <infiniband/verbs.h>
+#include <set>
 
 struct RDMA_Endpoint_Info
 {
