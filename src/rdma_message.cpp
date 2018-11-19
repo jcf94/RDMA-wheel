@@ -200,6 +200,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, RDMA_Session* ses
         }
         case RDMA_MESSAGE_CLOSE:
         {
+            log_ok("RDMA_MESSAGE_CLOSE");
             RDMA_Message::send_message_to_channel(channel, RDMA_MESSAGE_CLOSE_ACK);
             if (!session->pre()) // pre_ is NULL means session is in ptp mode
             {
@@ -210,6 +211,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, RDMA_Session* ses
         }
         case RDMA_MESSAGE_CLOSE_ACK:
         {
+            log_ok("RDMA_MESSAGE_CLOSE_ACK");
             if (channel->endpoint()->buffer_set_size() == 0)
             {
                 RDMA_Message::send_message_to_channel(channel, RDMA_MESSAGE_CLOSE_TERMINATE);
@@ -225,6 +227,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, RDMA_Session* ses
         }
         case RDMA_MESSAGE_CLOSE_TERMINATE:
         {
+            log_ok("RDMA_MESSAGE_CLOSE_TERMINATE");
             session->status_ = CLOSED;
             break;
         }

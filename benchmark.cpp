@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
         RDMA_Endpoint* endpoint = session.ptp_connect(&pre_tcp);
 
         // Prepare data
-        int total_data = 256 * MB;
-        int block_data = 512 * KB;
+        int total_data = 32 * MB;
+        int block_data = 64 * KB;
 
         if (strcmp(argv[1], "s") == 0)
         {
@@ -83,9 +83,11 @@ int main(int argc, char* argv[])
             std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
             log_ok(make_string("Send Over, Total %lld Bytes with Block size %lld Bytes", total_data, block_data));
             log_ok(make_string("Total Time used: %lld ms, Bandwidth: %lf MB/s", duration, (double)(total_data / MB) / duration * 1000));
 
+            //this_thread::sleep_for(2s);
             endpoint->close();
         }
     }

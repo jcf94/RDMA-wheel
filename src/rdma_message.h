@@ -20,7 +20,7 @@ enum Message_type                   // Use Immediate Number as message type
     RDMA_MESSAGE_CLOSE_TERMINATE,   // no extra data
     RDMA_MESSAGE_SYNC_ACK,          // no extra data
 
-    RDMA_MESSAGE_SYNC_REQUEST,
+    RDMA_MESSAGE_SYNC_REQUEST,      // size
     RDMA_MESSAGE_WRITE_REQUEST,     // addr(map key), size
     RDMA_MESSAGE_WRITE_READY,       // addr, size, rkey
     RDMA_MESSAGE_READ_REQUEST,      // addr, size, rkey
@@ -31,25 +31,24 @@ enum Message_type                   // Use Immediate Number as message type
 
 struct Message_Content
 {
-    //Buffer_MR buffer_mr;
     uint64_t remote_addr;
-    uint32_t rkey;
     uint64_t buffer_size;
+    uint32_t rkey;
 
-    // |remote_addr|rkey|buffer_size|
-    // |     8B    | 4B |     8B    |
+    // |remote_addr|buffer_size|rkey|
+    // |     8B    |     8B    | 4B |
 };
 
 static const size_t kRemoteAddrStartIndex = 0;
 static const size_t kRemoteAddrEndIndex = kRemoteAddrStartIndex + sizeof(Message_Content::remote_addr);
 
-static const size_t kRkeyStartIndex = kRemoteAddrEndIndex;
-static const size_t kRkeyEndIndex = kRkeyStartIndex + sizeof(Message_Content::rkey);
-
-static const size_t kBufferSizeStartIndex = kRkeyEndIndex;
+static const size_t kBufferSizeStartIndex = kRemoteAddrEndIndex;
 static const size_t kBufferSizeEndIndex = kBufferSizeStartIndex + sizeof(Message_Content::buffer_size);
 
-static const size_t kMessageTotalBytes = kBufferSizeEndIndex;
+static const size_t kRkeyStartIndex = kBufferSizeEndIndex;
+static const size_t kRkeyEndIndex = kRkeyStartIndex + sizeof(Message_Content::rkey);
+
+static const size_t kMessageTotalBytes = kRkeyEndIndex;
 
 class RDMA_Channel;
 class RDMA_Session;

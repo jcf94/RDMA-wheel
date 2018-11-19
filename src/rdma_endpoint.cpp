@@ -144,6 +144,7 @@ RDMA_Buffer* RDMA_Endpoint::register_buffer(int size, void* addr)
 
 void RDMA_Endpoint::release_buffer(RDMA_Buffer* buffer)
 {
+    if (extra_buffer_set_.empty()) log_error("empty!!!!!!!!");
     std::multiset<RDMA_Buffer*>::iterator target = extra_buffer_set_.find(buffer);
     if (target != extra_buffer_set_.end())
     {
@@ -153,10 +154,12 @@ void RDMA_Endpoint::release_buffer(RDMA_Buffer* buffer)
     {
         log_error("Extra Buffer not found");
     }
+    log_ok(extra_buffer_set_.size());
 }
 
 int RDMA_Endpoint::buffer_set_size()
 {
+    //log_ok(extra_buffer_set_.size());
     return extra_buffer_set_.size();
 }
 

@@ -180,6 +180,7 @@ bool RDMA_Channel::data_recv_success(int size)
 
 void RDMA_Channel::target_count_set(uint64_t size)
 {
+    log_ok(total_recv_data_);
     total_recv_data_ = 0;
     target_recv_data_ = size;
 }
