@@ -31,12 +31,16 @@ class RDMA_Endpoint;
 class RDMA_Buffer;
 class ThreadPool;
 
-struct Buffer_MR;
+struct Buffer_MR
+{
+    uint64_t remote_addr;
+    uint32_t rkey;
+};
 
 class RDMA_Channel
 {
 public:
-    explicit RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp);
+    RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp);
     ~RDMA_Channel();
 
     void request_read(RDMA_Buffer* buffer);

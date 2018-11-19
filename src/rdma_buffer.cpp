@@ -5,6 +5,7 @@ PROG	: RDMA_BUFFER_CPP
 ************************************************ */
 
 #include "rdma_buffer.h"
+
 #include "rdma_util.h"
 
 RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr)

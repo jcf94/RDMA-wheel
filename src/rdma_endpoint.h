@@ -27,7 +27,7 @@ class RDMA_Buffer;
 class RDMA_Endpoint
 {
 public:
-    explicit RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size);
+    RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size);
     ~RDMA_Endpoint();
 
     struct cm_con_data_t get_local_con_data();

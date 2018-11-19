@@ -28,7 +28,7 @@ enum Session_status
 class RDMA_Session
 {
 public:
-    RDMA_Session(char* dev_name = NULL);
+    explicit RDMA_Session(char* dev_name = NULL);
     ~RDMA_Session();
 
     void stop_process();

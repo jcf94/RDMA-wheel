@@ -4,13 +4,13 @@ LANG	: G++
 PROG	: RDMA_CHANNEL_CPP
 ************************************************ */
 
-#include "rdma_util.h"
-
-#include "rdma_message.h"
 #include "rdma_channel.h"
+
+#include "rdma_util.h"
+#include "rdma_message.h"
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
-#include "../utils/ThreadPool/src/ThreadPool.h"
+#include "utils/ThreadPool/src/ThreadPool.h"
 
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     : endpoint_(endpoint), pd_(pd), qp_(qp), local_status_(IDLE), remote_status_(IDLE)
@@ -157,8 +157,8 @@ void RDMA_Channel::read_data(RDMA_Buffer* buffer, Message_Content msg)
     wr.num_sge = 1;
     wr.opcode = IBV_WR_RDMA_READ;
     wr.send_flags = IBV_SEND_SIGNALED;
-    wr.wr.rdma.remote_addr = (uint64_t) msg.buffer_mr.remote_addr;
-    wr.wr.rdma.rkey = msg.buffer_mr.rkey;
+    wr.wr.rdma.remote_addr = (uint64_t) msg.remote_addr;
+    wr.wr.rdma.rkey = msg.rkey;
 
     struct ibv_send_wr *bad_wr;
     if (ibv_post_send(qp_, &wr, &bad_wr))

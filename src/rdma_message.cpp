@@ -28,8 +28,8 @@ Message_Content RDMA_Message::parse_message_content(char* content)
     Message_Content msg;
 
     memcpy(&(msg.buffer_size), &content[kBufferSizeStartIndex], 8);
-    memcpy(&(msg.buffer_mr.remote_addr), &content[kRemoteAddrStartIndex], 8);
-    memcpy(&(msg.buffer_mr.rkey), &content[kRkeyStartIndex], 4);
+    memcpy(&(msg.remote_addr), &content[kRemoteAddrStartIndex], 8);
+    memcpy(&(msg.rkey), &content[kRkeyStartIndex], 4);
 
     return msg;
 }
@@ -152,7 +152,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc, RDMA_Session* sess
 
             RDMA_Buffer* test_new = channel->endpoint()->register_buffer(msg.buffer_size);
 
-            channel->insert_to_table((uint64_t)test_new, (uint64_t)msg.buffer_mr.remote_addr
+            channel->insert_to_table((uint64_t)test_new, (uint64_t)msg.remote_addr
             );
 
             channel->read_data(test_new, msg);
@@ -164,7 +164,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc, RDMA_Session* sess
             Message_Content msg = RDMA_Message::parse_message_content((char*)channel->incoming()->buffer());
             send_message_to_channel(channel, RDMA_MESSAGE_ACK);
 
-            RDMA_Buffer* buf = (RDMA_Buffer*)channel->find_in_table((uint64_t)msg.buffer_mr.remote_addr);
+            RDMA_Buffer* buf = (RDMA_Buffer*)channel->find_in_table((uint64_t)msg.remote_addr);
             //delete buf;
 
             channel->endpoint()->release_buffer(buf);

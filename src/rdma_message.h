@@ -29,15 +29,11 @@ enum Message_type                   // Use Immediate Number as message type
     RDMA_DATA                       // not a message, but memory data
 };
 
-struct Buffer_MR
-{
-    uint64_t remote_addr;
-    uint32_t rkey;
-};
-
 struct Message_Content
 {
-    Buffer_MR buffer_mr;
+    //Buffer_MR buffer_mr;
+    uint64_t remote_addr;
+    uint32_t rkey;
     uint64_t buffer_size;
 
     // |remote_addr|rkey|buffer_size|
@@ -45,9 +41,11 @@ struct Message_Content
 };
 
 static const size_t kRemoteAddrStartIndex = 0;
-static const size_t kRemoteAddrEndIndex = kRemoteAddrStartIndex + sizeof(Message_Content::buffer_mr.remote_addr);
+static const size_t kRemoteAddrEndIndex = kRemoteAddrStartIndex + sizeof(Message_Content::remote_addr);
+
 static const size_t kRkeyStartIndex = kRemoteAddrEndIndex;
-static const size_t kRkeyEndIndex = kRkeyStartIndex + sizeof(Message_Content::buffer_mr.rkey);
+static const size_t kRkeyEndIndex = kRkeyStartIndex + sizeof(Message_Content::rkey);
+
 static const size_t kBufferSizeStartIndex = kRkeyEndIndex;
 static const size_t kBufferSizeEndIndex = kBufferSizeStartIndex + sizeof(Message_Content::buffer_size);
 
