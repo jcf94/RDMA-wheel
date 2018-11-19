@@ -135,39 +135,10 @@ void RDMA_Endpoint::close()
 
 // ----------------------------------------------
 
-RDMA_Buffer* RDMA_Endpoint::register_buffer(int size, void* addr)
-{
-    RDMA_Buffer* new_buffer = new RDMA_Buffer(channel_, pd_, size, addr);
-    extra_buffer_set_.insert(new_buffer);
-    return new_buffer;
-}
-
-void RDMA_Endpoint::release_buffer(RDMA_Buffer* buffer)
-{
-    if (extra_buffer_set_.empty()) log_error("empty!!!!!!!!");
-    std::multiset<RDMA_Buffer*>::iterator target = extra_buffer_set_.find(buffer);
-    if (target != extra_buffer_set_.end())
-    {
-        delete (*target);
-        extra_buffer_set_.erase(target);
-    } else
-    {
-        log_error("Extra Buffer not found");
-    }
-    log_ok(extra_buffer_set_.size());
-}
-
-int RDMA_Endpoint::buffer_set_size()
-{
-    //log_ok(extra_buffer_set_.size());
-    return extra_buffer_set_.size();
-}
-
-// ----------------------------------------------
-
 void RDMA_Endpoint::send_data(void* addr, int size)
 {
-    channel_->request_read(register_buffer(size, addr));
+    RDMA_Buffer* new_buffer = new RDMA_Buffer(channel_, pd_, size, addr);
+    channel_->request_read(new_buffer);
 }
 
 // ----------------------------------------------

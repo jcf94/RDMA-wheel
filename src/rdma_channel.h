@@ -55,6 +55,7 @@ public:
 
     uint64_t find_in_table(uint64_t key, bool erase = true);
     void insert_to_table(uint64_t key, uint64_t value);
+    int get_table_size();
 
     void task_with_lock(std::function<void()> task);
     void release_local();
@@ -78,7 +79,7 @@ private:
     // Queue pair
     ibv_qp* qp_;
 
-    std::multimap<uint64_t, uint64_t> map_table_;
+    std::map<uint64_t, uint64_t> map_table_;
     std::mutex map_lock_;
 
     // Message incoming buffer, only read

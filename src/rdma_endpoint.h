@@ -34,10 +34,6 @@ public:
     void connect(struct cm_con_data_t remote_con_data);
     void close();
 
-    RDMA_Buffer* register_buffer(int size, void* addr = NULL);
-    void release_buffer(RDMA_Buffer* buffer);
-    int buffer_set_size();
-
     void send_data(void* addr, int size);
 
     void set_sync_barrier(int size);
@@ -64,8 +60,6 @@ private:
     RDMA_Endpoint_Info self_, remote_;
     // Message channel
     RDMA_Channel* channel_ = NULL;
-    // Extra buffer list
-    std::multiset<RDMA_Buffer*> extra_buffer_set_;
 };
 
 #endif // !RDMA_ENDPOINT_H

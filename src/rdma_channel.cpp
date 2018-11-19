@@ -210,7 +210,15 @@ void RDMA_Channel::insert_to_table(uint64_t key, uint64_t value)
 {
     std::lock_guard<std::mutex> lock(map_lock_);
     //log_warning(make_string("Insert %p %p", key, value));
+    auto temp = map_table_.find(key);
+    if (temp != map_table_.end()) {log_error("already have");}
     map_table_.insert(std::make_pair(key, value));
+}
+
+int RDMA_Channel::get_table_size()
+{
+    std::lock_guard<std::mutex> lock(map_lock_);
+    return map_table_.size();
 }
 
 // ----------------------------------------------

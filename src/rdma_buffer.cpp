@@ -11,7 +11,7 @@ PROG	: RDMA_BUFFER_CPP
 RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr)
     : channel_(channel), size_(size)
 {
-    if (addr)
+    if (addr != NULL)
     {
         buffer_ = addr;
         buffer_owned_ = false;

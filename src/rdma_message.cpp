@@ -100,7 +100,7 @@ void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type m
         {
             channel->task_with_lock([channel, msgt, data]
             {
-                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), 0, data, NULL);
+                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), NULL, data, NULL);
                 channel->write(msgt, kBufferSizeEndIndex);
             });
             break;
@@ -109,7 +109,7 @@ void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type m
         {
             channel->task_with_lock([channel, msgt, data]
             {
-                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), (void*)data, kRemoteAddrEndIndex, NULL);
+                RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), (void*)data, 0, NULL);
                 channel->write(msgt, kRemoteAddrEndIndex);
             });
             break;
@@ -150,7 +150,7 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc, RDMA_Session* sess
             Message_Content msg = RDMA_Message::parse_message_content((char*)channel->incoming()->buffer());
             send_message_to_channel(channel, RDMA_MESSAGE_ACK);
 
-            RDMA_Buffer* test_new = channel->endpoint()->register_buffer(msg.buffer_size);
+            RDMA_Buffer* test_new = new RDMA_Buffer(channel, channel->pd(), msg.buffer_size);
 
             channel->insert_to_table((uint64_t)test_new, (uint64_t)msg.remote_addr
             );
@@ -165,10 +165,10 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc, RDMA_Session* sess
             send_message_to_channel(channel, RDMA_MESSAGE_ACK);
 
             RDMA_Buffer* buf = (RDMA_Buffer*)channel->find_in_table((uint64_t)msg.remote_addr);
-            //delete buf;
+            delete buf;
 
-            channel->endpoint()->release_buffer(buf);
-            if (session->status_ == CLOSING && channel->endpoint()->buffer_set_size() == 0)
+            //channel->endpoint()->release_buffer(buf);
+            if (session->status_ == CLOSING && channel->get_table_size() == 0)
             {
                 send_message_to_channel(channel, RDMA_MESSAGE_CLOSE_TERMINATE);
                 session->status_ = CLOSED;
@@ -212,7 +212,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, RDMA_Session* ses
         case RDMA_MESSAGE_CLOSE_ACK:
         {
             log_ok("RDMA_MESSAGE_CLOSE_ACK");
-            if (channel->endpoint()->buffer_set_size() == 0)
+            if (channel->get_table_size() == 0)
             {
                 RDMA_Message::send_message_to_channel(channel, RDMA_MESSAGE_CLOSE_TERMINATE);
                 session->status_ = CLOSED;
@@ -283,6 +283,6 @@ void RDMA_Message::process_read_success(const ibv_wc &wc, RDMA_Session* session)
     uint64_t res = channel->find_in_table((uint64_t)rb);
     send_message_to_channel(channel, RDMA_MESSAGE_READ_OVER, res);
 
-    //delete rb;
-    channel->endpoint()->release_buffer(rb);
+    delete rb;
+    //channel->endpoint()->release_buffer(rb);
 }
