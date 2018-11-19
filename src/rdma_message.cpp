@@ -98,6 +98,7 @@ void RDMA_Message::send_message_to_channel(RDMA_Channel* channel, Message_type m
         }
         case RDMA_MESSAGE_SYNC_REQUEST:
         {
+            RDMA_Message::sync_flag = false;
             channel->task_with_lock([channel, msgt, data]
             {
                 RDMA_Message::fill_message_content((char*)channel->outgoing()->buffer(), NULL, data, NULL);
@@ -200,7 +201,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, RDMA_Session* ses
         }
         case RDMA_MESSAGE_CLOSE:
         {
-            log_ok("RDMA_MESSAGE_CLOSE");
+            //log_ok("RDMA_MESSAGE_CLOSE");
             RDMA_Message::send_message_to_channel(channel, RDMA_MESSAGE_CLOSE_ACK);
             if (!session->pre()) // pre_ is NULL means session is in ptp mode
             {
@@ -211,7 +212,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, RDMA_Session* ses
         }
         case RDMA_MESSAGE_CLOSE_ACK:
         {
-            log_ok("RDMA_MESSAGE_CLOSE_ACK");
+            //log_ok("RDMA_MESSAGE_CLOSE_ACK");
             if (channel->get_table_size() == 0)
             {
                 RDMA_Message::send_message_to_channel(channel, RDMA_MESSAGE_CLOSE_TERMINATE);
@@ -227,7 +228,7 @@ void RDMA_Message::process_immediate_message(const ibv_wc &wc, RDMA_Session* ses
         }
         case RDMA_MESSAGE_CLOSE_TERMINATE:
         {
-            log_ok("RDMA_MESSAGE_CLOSE_TERMINATE");
+            //log_ok("RDMA_MESSAGE_CLOSE_TERMINATE");
             session->status_ = CLOSED;
             break;
         }
@@ -275,7 +276,7 @@ void RDMA_Message::process_read_success(const ibv_wc &wc, RDMA_Session* session)
 
     if (channel->data_recv_success(rb->size()))
     {
-        log_ok("recv over");
+        log_ok("Sync Target Get");
         send_message_to_channel(channel, RDMA_MESSAGE_SYNC_ACK);
     }
     //log_ok(make_string("RDMA Read: %d bytes, total %d bytes", rb->size(), endpoint->total_recv_data()));

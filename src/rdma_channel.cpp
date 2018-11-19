@@ -180,7 +180,7 @@ bool RDMA_Channel::data_recv_success(int size)
 
 void RDMA_Channel::target_count_set(uint64_t size)
 {
-    log_ok(total_recv_data_);
+    log_info(make_string("Recv Count: %lld", total_recv_data_));
     total_recv_data_ = 0;
     target_recv_data_ = size;
 }
@@ -218,6 +218,7 @@ void RDMA_Channel::insert_to_table(uint64_t key, uint64_t value)
 int RDMA_Channel::get_table_size()
 {
     std::lock_guard<std::mutex> lock(map_lock_);
+    //log_ok(map_table_.size());
     return map_table_.size();
 }
 
