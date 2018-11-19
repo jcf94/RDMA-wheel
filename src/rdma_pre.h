@@ -4,6 +4,10 @@ LANG   : G++
 PROG   : RDMA_PRE_H
 ************************************************ */
 
+// class RDMA_Pre
+// 
+// Responsible for pre connection before RDMA, it's needed for info exchange
+
 #ifndef RDMA_PRE_H
 #define RDMA_PRE_H
 
@@ -15,7 +19,7 @@ struct config_t
     int ib_port;        /* local IB port to work with */
 };
 
-class RDMA_Pre      // Responsible for pre connection before RDMA, it's needed for info exchange
+class RDMA_Pre
 {
 public:
     RDMA_Pre() {}

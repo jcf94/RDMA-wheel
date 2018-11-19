@@ -4,9 +4,6 @@ LANG   : G++
 PROG   : RDMA_MESSAGE_CPP
 ************************************************ */
 
-#include <thread>
-#include <chrono>
-
 #include "rdma_util.h"
 
 #include "rdma_message.h"

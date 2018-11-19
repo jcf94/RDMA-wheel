@@ -4,6 +4,10 @@ LANG	: G++
 PROG	: RDMA_BUFFER_H
 ************************************************ */
 
+// class RDMA_Buffer
+// 
+// Responsible for RDMA registed buffer manager
+
 #ifndef RDMA_BUFFER_H
 #define RDMA_BUFFER_H
 

@@ -62,23 +62,24 @@ int main(int argc, char* argv[])
             char* test_data = (char*)malloc(total_data);
 
             // Warm Up
-
+            // endpoint->set_sync_barrier(total_data);
             // for (int i=0;i<total_data;i+=block_data)
             // {
             //     endpoint->send_data((void*)(test_data+i), block_data);
             // }
+            // endpoint->wait_for_sync();
 
             // Test Start
 
             std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
-            endpoint->set_sync_barrier(total_data);
 
+            endpoint->set_sync_barrier(total_data);
             for (int i=0;i<total_data;i+=block_data)
             {
                 endpoint->send_data((void*)(test_data+i), block_data);
             }
-
             endpoint->wait_for_sync();
+
             std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
 
             auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
