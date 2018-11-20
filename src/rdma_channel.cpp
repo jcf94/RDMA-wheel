@@ -224,16 +224,24 @@ int RDMA_Channel::get_table_size()
 
 // ----------------------------------------------
 
-void RDMA_Channel::task_with_lock(std::function<void()> task)
+void RDMA_Channel::task_with_lock(std::function<void()> &&task)
 {
-    work_pool_->add_task([this, task]
+    work_pool_->add_task([this, task_run = std::move(task)]
     {
         std::unique_lock<std::mutex> lock(channel_cv_mutex_);
         channel_cv_.wait(lock, [this]{return local_status_ != LOCK && remote_status_ != LOCK;});
         local_status_ = LOCK;
         remote_status_ = LOCK;
 
-        task();
+        task_run();
+    });
+}
+
+void RDMA_Channel::task_without_lock(std::function<void()> &&task)
+{
+    work_pool_->add_task([this, task_run = std::move(task)]
+    {
+        task_run();
     });
 }
 

@@ -57,7 +57,8 @@ public:
     void insert_to_table(uint64_t key, uint64_t value);
     int get_table_size();
 
-    void task_with_lock(std::function<void()> task);
+    void task_with_lock(std::function<void()> &&task);
+    void task_without_lock(std::function<void()> &&task);
     void release_local();
     void release_remote();
     bool work_pool_clear();
