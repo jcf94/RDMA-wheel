@@ -29,6 +29,7 @@ enum Message_type                   // Use Immediate Number as message type
     RDMA_DATA                       // not a message, but memory data
 };
 
+#pragma pack(4)
 struct Message_Content
 {
     uint64_t remote_addr;
@@ -38,6 +39,7 @@ struct Message_Content
     // |remote_addr|buffer_size|rkey|
     // |     8B    |     8B    | 4B |
 };
+#pragma pack()
 
 static const size_t kRemoteAddrStartIndex = 0;
 static const size_t kRemoteAddrEndIndex = kRemoteAddrStartIndex + sizeof(Message_Content::remote_addr);
