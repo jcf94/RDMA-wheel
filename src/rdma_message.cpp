@@ -151,15 +151,15 @@ void RDMA_Message::process_attached_message(const ibv_wc &wc, RDMA_Session* sess
             Message_Content msg = RDMA_Message::parse_message_content((char*)channel->incoming()->buffer());
             send_message_to_channel(channel, RDMA_MESSAGE_ACK);
 
-            // channel->task_without_lock([channel, msg]
-            // {
+            channel->task_without_lock([channel, msg]
+            {
                 RDMA_Buffer* test_new = new RDMA_Buffer(channel, channel->pd(), msg.buffer_size);
 
                 channel->insert_to_table((uint64_t)test_new, (uint64_t)msg.remote_addr
                 );
 
                 channel->read_data(test_new, msg);
-            // });
+            });
 
             break;
         }

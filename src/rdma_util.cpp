@@ -6,6 +6,8 @@ PROG	: RDMA_UTIL_CPP
 
 #include "rdma_util.h"
 
+#include <stdexcept>
+
 std::string make_string(const char *fmt, ...)
 {
     char * sz;

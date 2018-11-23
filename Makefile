@@ -5,10 +5,10 @@
 # ***********************************************
 
 CC = g++
-CFLAGS += -std=c++14
+CFLAGS += -std=c++11
 
 LD = g++
-LDFLAGS += -std=c++14
+LDFLAGS += -std=c++11
 
 #NAME = $(wildcard *.cpp)
 NAME = benchmark.cpp

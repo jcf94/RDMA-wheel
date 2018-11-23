@@ -45,6 +45,16 @@ RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
         return;
     }
 
+    nolock_pool_ = new ThreadPool(DEFAULT_NOLOCK_POOL_THREADS);
+    if (nolock_pool_)
+    {
+        log_info("ThreadPool Created");
+    } else
+    {
+        log_error("Failed to create ThreadPool");
+        return;
+    }
+
     log_info("RDMA_Channel Created");
 }
 
@@ -55,6 +65,9 @@ RDMA_Channel::~RDMA_Channel()
 
     unlock_pool_->wait();
     delete unlock_pool_;
+
+    nolock_pool_->wait();
+    delete nolock_pool_;
 
     delete incoming_;
     delete outgoing_;
@@ -239,7 +252,7 @@ void RDMA_Channel::task_with_lock(std::function<void()> &&task)
 
 void RDMA_Channel::task_without_lock(std::function<void()> &&task)
 {
-    work_pool_->add_task([this, task_run = std::move(task)]
+    nolock_pool_->add_task([this, task_run = std::move(task)]
     {
         task_run();
     });

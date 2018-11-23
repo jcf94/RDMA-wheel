@@ -17,9 +17,10 @@ PROG	: RDMA_CHANNEL_H
 #include <functional>
 #include <infiniband/verbs.h>
 
-#define DEFAULT_TOTAL_POOL_THREADS 8
-#define DEFAULT_WORK_POOL_THREADS 6
-#define DEFAULT_UNLOCK_POOL_THREADS (DEFAULT_TOTAL_POOL_THREADS - DEFAULT_WORK_POOL_THREADS)
+#define DEFAULT_TOTAL_POOL_THREADS 10
+#define DEFAULT_WORK_POOL_THREADS 4
+#define DEFAULT_UNLOCK_POOL_THREADS 2
+#define DEFAULT_NOLOCK_POOL_THREADS (DEFAULT_TOTAL_POOL_THREADS - DEFAULT_WORK_POOL_THREADS - DEFAULT_UNLOCK_POOL_THREADS)
 
 enum Channel_status
 {
@@ -98,6 +99,7 @@ private:
     // ThreadPool used for data process
     ThreadPool* work_pool_ = NULL;
     ThreadPool* unlock_pool_ = NULL;
+    ThreadPool* nolock_pool_ = NULL;
 
     //Data count
     uint64_t total_recv_data_ = 0;
