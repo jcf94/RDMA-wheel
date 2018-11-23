@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
         RDMA_Endpoint* endpoint = session.ptp_connect(&pre_tcp);
 
         // Prepare data
-        int total_data = 512 * MB;
-        int block_data = 256 * KB;
+        int total_data = 256 * MB;
+        int block_data = 4 * KB;
 
         if (strcmp(argv[1], "s") == 0)
         {
