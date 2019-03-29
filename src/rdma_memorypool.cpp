@@ -27,6 +27,8 @@ RDMA_MemBlock::~RDMA_MemBlock()
     {
         log_error("ibv_dereg_mr failed");
     }
+
+    if (size_ > 0) ::free(blockaddr_);
     log_info("RDMA_MemBlock Deleted");
 }
 
@@ -55,5 +57,9 @@ RDMA_MemoryPool::RDMA_MemoryPool(ibv_pd* pd)
 
 RDMA_MemoryPool::~RDMA_MemoryPool()
 {
+    for (auto i:bllist_)
+    {
+        
+    }
     log_info("RDMA_MemoryPool Deleted");
 }

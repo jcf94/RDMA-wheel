@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 
         // Prepare data
         int total_data = 256 * MB;
-        int block_data = 512 * KB;
+        int block_data = 4 * KB;
 
         if (strcmp(argv[1], "s") == 0)
         {

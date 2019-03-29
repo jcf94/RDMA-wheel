@@ -27,13 +27,13 @@ RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr
         }
     } else
     {
-        log_info("ddddddddddddddddddddd");
+        //log_info("ddddddddddddddddddddd");
         //buffer_ = malloc(size);
         memblock_ = (RDMA_MemBlock*)channel_->endpoint()->session()->mempool()->blockalloc(size);
         buffer_ = memblock_->dataaddr();
         mr_ = memblock_->mr();
         buffer_owned_ = true;
-        channel_->endpoint()->session()->mempool()->travel();
+        //channel_->endpoint()->session()->mempool()->travel();
     }
 
     log_info("RDMA_Buffer Created");
@@ -45,7 +45,7 @@ RDMA_Buffer::~RDMA_Buffer()
     {
         //free(buffer_);
         memblock_->free();
-        channel_->endpoint()->session()->mempool()->travel();
+        //channel_->endpoint()->session()->mempool()->travel();
     } else
     {
         if (ibv_dereg_mr(mr_))
