@@ -208,6 +208,9 @@ int RDMA_Endpoint::modify_qp_to_rtr()
         IBV_QP_RQ_PSN | IBV_QP_MAX_DEST_RD_ATOMIC | IBV_QP_MIN_RNR_TIMER;
 
     rc = ibv_modify_qp(qp_, &attr, flags);
+    // TODO: This Part is now only designed for IB,
+    //       When Using RoCE, GRH must be configured.
+    //       See https://www.rdmamojo.com/2013/01/12/ibv_modify_qp/
     if (rc) {
         fprintf(stderr, "failed to modify QP state to RTR\n");
         return rc;
