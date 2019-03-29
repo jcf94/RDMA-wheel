@@ -10,7 +10,7 @@ PROG	: RDMA_CHANNEL_CPP
 #include "rdma_message.h"
 #include "rdma_endpoint.h"
 #include "rdma_buffer.h"
-#include "utils/ThreadPool/src/ThreadPool.h"
+#include "ThreadPool.h"
 
 RDMA_Channel::RDMA_Channel(RDMA_Endpoint* endpoint, ibv_pd* pd, ibv_qp* qp)
     : endpoint_(endpoint), pd_(pd), qp_(qp), local_status_(IDLE), remote_status_(IDLE)

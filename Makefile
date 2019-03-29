@@ -5,7 +5,7 @@
 # ***********************************************
 
 CC = g++
-CFLAGS += -std=c++14
+CFLAGS += -std=c++14 -Iutils/ThreadPool/src -Iutils/MemoryPool/src
 
 LD = g++
 LDFLAGS += -std=c++14
@@ -16,7 +16,7 @@ NAME = benchmark.cpp
 NAME-OBJS = $(patsubst %.cpp, %.o, $(NAME))
 TARGET = $(patsubst %.cpp, %, $(NAME))
 
-SRCS = $(wildcard src/*.cpp utils/ThreadPool/src/*.cpp)
+SRCS = $(wildcard src/*.cpp utils/ThreadPool/src/*.cpp utils/MemoryPool/src/*.cpp)
 SRCS-OBJS = $(patsubst %.cpp, %.o, $(SRCS))
 
 CLEAN-O = rm -f $(SRCS-OBJS) $(NAME-OBJS)
