@@ -9,7 +9,6 @@ PROG	: RDMA_UTIL_H
 
 #include <stdint.h>
 #include <stdarg.h>
-#include <byteswap.h>
 
 #include <iostream>
 #include <string>
@@ -83,11 +82,29 @@ std::string make_string(const char *fmt, ...);
 std::mt19937_64* InitRng();
 long long New64();
 
+#define __bswap_32_bit(x) \
+    ((((x) & 0xff000000) >> 24)     \
+    | (((x) & 0x00ff0000) >>  8)    \
+    | (((x) & 0x0000ff00) <<  8)    \
+    | (((x) & 0x000000ff) << 24))
+
+#define __bswap_64_bit(x) \
+    ((((x) & 0xff00000000000000ull) >> 56)  \
+    | (((x) & 0x00ff000000000000ull) >> 40) \
+    | (((x) & 0x0000ff0000000000ull) >> 24) \
+    | (((x) & 0x000000ff00000000ull) >> 8)  \
+    | (((x) & 0x00000000ff000000ull) << 8)  \
+    | (((x) & 0x0000000000ff0000ull) << 24) \
+    | (((x) & 0x000000000000ff00ull) << 40) \
+    | (((x) & 0x00000000000000ffull) << 56))
+
+namespace rdma_util {
+
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-static inline uint64_t htonll(uint64_t x) { return bswap_64(x); }
-static inline uint64_t ntohll(uint64_t x) { return bswap_64(x); }
-static inline uint32_t htonl(uint32_t x) { return bswap_32(x); }
-static inline uint32_t ntohl(uint32_t x) { return bswap_32(x); }
+static inline uint64_t htonll(uint64_t x) { return __bswap_64_bit(x); }
+static inline uint64_t ntohll(uint64_t x) { return __bswap_64_bit(x); }
+static inline uint32_t htonl(uint32_t x) { return __bswap_32_bit(x); }
+static inline uint32_t ntohl(uint32_t x) { return __bswap_32_bit(x); }
 #elif __BYTE_ORDER == __BIG_ENDIAN
 static inline uint64_t htonll(uint64_t x) { return x; }
 static inline uint64_t ntohll(uint64_t x) { return x; }
@@ -96,6 +113,8 @@ static inline uint32_t ntohl(uint32_t x) { return x; }
 #else
 #error __BYTE_ORDER is neither __LITTLE_ENDIAN nor __BIG_ENDIAN
 #endif
+
+}
 // ---- UTILS
 
 // ---- RDMA

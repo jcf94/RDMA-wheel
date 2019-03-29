@@ -6,7 +6,6 @@ PROG	: RDMA_ENDPOINT_CPP
 
 #include "rdma_endpoint.h"
 
-#include <netdb.h>
 #include "rdma_util.h"
 #include "rdma_message.h"
 #include "rdma_buffer.h"
@@ -81,11 +80,11 @@ cm_con_data_t RDMA_Endpoint::get_local_con_data()
 {
     cm_con_data_t local_con_data;
     // exchange using TCP sockets info required to connect QPs
-    local_con_data.maddr = htonll((uintptr_t)channel_->incoming()->buffer());
-    local_con_data.mrkey = htonl(channel_->incoming()->mr()->rkey);
-    local_con_data.qpn = htonl(self_.qpn);
-    local_con_data.lid = htonl(self_.lid);
-    local_con_data.psn = htonl(self_.psn);
+    local_con_data.maddr = rdma_util::htonll((uintptr_t)channel_->incoming()->buffer());
+    local_con_data.mrkey = rdma_util::htonl(channel_->incoming()->mr()->rkey);
+    local_con_data.qpn = rdma_util::htonl(self_.qpn);
+    local_con_data.lid = rdma_util::htonl(self_.lid);
+    local_con_data.psn = rdma_util::htonl(self_.psn);
 
     log_info(make_string("Local QP number  = 0x%x", self_.qpn));
     log_info(make_string("Local LID        = 0x%x", self_.lid));
@@ -101,11 +100,11 @@ void RDMA_Endpoint::connect(cm_con_data_t remote_con_data)
         log_warning("Channel Already Connected.");
     } else
     {
-        channel_->remote_mr_.remote_addr = ntohll(remote_con_data.maddr);
-        channel_->remote_mr_.rkey = ntohl(remote_con_data.mrkey);
-        remote_.qpn = ntohl(remote_con_data.qpn);
-        remote_.lid = ntohl(remote_con_data.lid);
-        remote_.psn = ntohl(remote_con_data.psn);
+        channel_->remote_mr_.remote_addr = rdma_util::ntohll(remote_con_data.maddr);
+        channel_->remote_mr_.rkey = rdma_util::ntohl(remote_con_data.mrkey);
+        remote_.qpn = rdma_util::ntohl(remote_con_data.qpn);
+        remote_.lid = rdma_util::ntohl(remote_con_data.lid);
+        remote_.psn = rdma_util::ntohl(remote_con_data.psn);
 
         /* save the remote side attributes, we will need it for the post SR */
 

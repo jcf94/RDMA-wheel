@@ -16,6 +16,19 @@ For exp. [TensorFlow's Verbs design](https://github.com/tensorflow/tensorflow/tr
 
 ---
 
+## Usage
+
+```bash
+$ git clone https://github.com/jcf94/RDMA-wheel.git
+$ cd RDMA-wheel
+$ git submodule init
+$ git submodule update
+```
+
+Start to test.
+
+---
+
 ## Test Performance
 
 in 56 Gb/s FDR

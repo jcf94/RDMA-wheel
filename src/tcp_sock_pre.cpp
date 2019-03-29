@@ -4,6 +4,9 @@ LANG	: G++
 PROG	: TCP_SOCK_PRE_CPP
 ************************************************ */
 
+#include "tcp_sock_pre.h"
+#include "rdma_util.h"
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/epoll.h>
@@ -11,9 +14,6 @@ PROG	: TCP_SOCK_PRE_CPP
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
-
-#include "tcp_sock_pre.h"
-#include "rdma_util.h"
 
 TCP_Sock_Pre::TCP_Sock_Pre()
 {
