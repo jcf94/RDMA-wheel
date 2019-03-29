@@ -11,8 +11,8 @@ PROG	: RDMA_ENDPOINT_CPP
 #include "rdma_buffer.h"
 #include "rdma_channel.h"
 
-RDMA_Endpoint::RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size)
-    : pd_(pd), ib_port_(ib_port), connected_(false)
+RDMA_Endpoint::RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size, RDMA_Session* session)
+    : pd_(pd), ib_port_(ib_port), connected_(false), session_(session)
 {
     // create the Queue Pair
     struct ibv_qp_init_attr qp_init_attr;

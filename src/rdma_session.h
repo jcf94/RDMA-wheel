@@ -17,6 +17,7 @@ PROG	: RDMA_SESSION_H
 
 class RDMA_Endpoint;
 class RDMA_Pre;
+class RDMA_MemoryPool;
 
 enum Session_status
 {
@@ -43,6 +44,7 @@ public:
 
     // ----- Private To Public -----
     inline RDMA_Pre* pre() const {return pre_;}
+    inline RDMA_MemoryPool* mempool() const {return mempool_;}
 
     // Session status
     Session_status status_;
@@ -62,6 +64,8 @@ private:
     ibv_cq* cq_;
     // Pre connection used to establish RDMA link
     RDMA_Pre* pre_ = NULL;
+    // MemoryPool
+    RDMA_MemoryPool* mempool_ = NULL;
     // List of endpoints
     std::vector<RDMA_Endpoint*> endpoint_list_;
     // Thread used to process CQ

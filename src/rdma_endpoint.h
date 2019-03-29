@@ -23,11 +23,12 @@ struct RDMA_Endpoint_Info
 
 class RDMA_Channel;
 class RDMA_Buffer;
+class RDMA_Session;
 
 class RDMA_Endpoint
 {
 public:
-    RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size);
+    RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size, RDMA_Session* session);
     ~RDMA_Endpoint();
 
     struct cm_con_data_t get_local_con_data();
@@ -41,6 +42,7 @@ public:
 
     // ----- Private To Public -----
     inline RDMA_Channel* channel() const {return channel_;}
+    inline RDMA_Session* session() const {return session_;}
 
     bool connected_;
 
@@ -60,6 +62,8 @@ private:
     RDMA_Endpoint_Info self_, remote_;
     // Message channel
     RDMA_Channel* channel_ = NULL;
+    // Session
+    RDMA_Session* session_ = NULL;
 };
 
 #endif // !RDMA_ENDPOINT_H

@@ -15,6 +15,7 @@ PROG	: RDMA_SESSION_CPP
 #include "rdma_endpoint.h"
 #include "rdma_pre.h"
 #include "rdma_message.h"
+#include "rdma_memorypool.h"
 
 #define MSG_SIZE 20
 
@@ -62,6 +63,8 @@ RDMA_Session::RDMA_Session(char* dev_name)
         return;
     }
 
+    mempool_ = new RDMA_MemoryPool(pd_);
+
     // Use a new thread to do the CQ processing
     process_thread_.reset(new std::thread(std::bind(&RDMA_Session::session_processCQ, this)));
 
@@ -76,6 +79,8 @@ RDMA_Session::~RDMA_Session()
         delete i;
     
     process_thread_.reset();
+
+    delete mempool_;
     
     if (ibv_destroy_cq(cq_))
     {
@@ -106,7 +111,7 @@ void RDMA_Session::stop_process()
 
 RDMA_Endpoint* RDMA_Session::new_endpoint(RDMA_Pre* pre)
 {
-    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(pd_, cq_, context_, pre->config.ib_port, CQ_SIZE);
+    RDMA_Endpoint* new_endpoint = new RDMA_Endpoint(pd_, cq_, context_, pre->config.ib_port, CQ_SIZE, this);
     endpoint_list_.push_back(new_endpoint);
     new_endpoint->connect(pre->exchange_qp_data(new_endpoint->get_local_con_data()));
 

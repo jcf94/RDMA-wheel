@@ -11,6 +11,8 @@ PROG	: RDMA_BUFFER_H
 #ifndef RDMA_BUFFER_H
 #define RDMA_BUFFER_H
 
+#include "rdma_memorypool.h"
+
 #include <infiniband/verbs.h>
 
 class RDMA_Channel;
@@ -34,6 +36,7 @@ private:
     void* buffer_ = NULL;
     uint64_t size_;
     ibv_mr* mr_;
+    RDMA_MemBlock* memblock_;
 };
 
 #endif // !RDMA_BUFFER_H

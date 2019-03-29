@@ -44,9 +44,13 @@ int main(int argc, char* argv[])
             // char a[] = "Hello World from Server !!!!!";
             // endpoint->send_data((void*)a, sizeof(a));
 
+            log_ok("Ready to Transport\n");
+
         } else if (strcmp(argv[1], "c") == 0)
         {
             RDMA_Endpoint* endpoint = session.ptp_connect(&pre_tcp);
+
+            log_ok("Ready to Transport\n");
 
             char a[] = "Hello World from Client !!!!!";
             endpoint->send_data((void*)a, sizeof(a));

@@ -9,29 +9,32 @@ PROG   : RDMA_MEMORYPOOL_H
 
 #include "memorypool.h"
 
+#include <infiniband/verbs.h>
+
+class RDMA_MemoryPool;
+
 class RDMA_MemBlock : public BaseBlock
 {
 public:
-    RDMA_MemBlock(BlockList* blocklist, int size)
-        : BaseBlock(blocklist, size)
-    {
+    RDMA_MemBlock(BlockList* blocklist, int size, RDMA_MemoryPool* mempool,
+        ibv_pd* pd);
+    ~RDMA_MemBlock();
 
-    }
+    inline ibv_mr* mr() const {return mr_;}
 
-    ~RDMA_MemBlock()
-    {
-
-    }
+private:
+    RDMA_MemoryPool* mempool_;
+    ibv_mr* mr_;
 };
 
 class RDMA_MemoryPool : public MemoryPool
 {
 public:
-    RDMA_MemoryPool();
+    RDMA_MemoryPool(ibv_pd* pd);
     ~RDMA_MemoryPool();
 
 private:
-
+    ibv_pd* pd_;
 };
 
 
