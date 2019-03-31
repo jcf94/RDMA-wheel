@@ -50,8 +50,8 @@ int main(int argc, char* argv[])
         RDMA_Endpoint* endpoint = session.ptp_connect(&pre_tcp);
 
         // Prepare data
-        int total_data = 256 * MB;
-        int block_data = 4 * KB;
+        int total_data = 1024 * MB;
+        int block_data = 1024 * KB;
 
         if (strcmp(argv[1], "s") == 0)
         {
@@ -60,7 +60,6 @@ int main(int argc, char* argv[])
         {
             //char* test_data = (char*)malloc(total_data);
             RDMA_Buffer* test_data = endpoint->bufferalloc(total_data);
-            printf("%p\n", test_data->buffer());
 
             // Warm Up
             // endpoint->set_sync_barrier(total_data);

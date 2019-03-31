@@ -84,3 +84,14 @@ Continue to be improved ...
 Bad ...
 
 The memorypool is protected by std::mutex, maybe this can be improved.
+
+[Commit b7eda2b](https://github.com/jcf94/RDMA-wheel/commit/b7eda2bd2a1c6f229620dc7cc404355629daec1b):
+
+|Total Bytes|Block Size|Bandwidth|
+|-|-|-|
+|256 MB|4 KB|130 MB/s|
+|256 MB|64 KB|1570 MB/s|
+|1 GB|256 KB|4129 MB/s|
+|1 GB|1 MB|4413 MB/s|
+
+Seems good.
