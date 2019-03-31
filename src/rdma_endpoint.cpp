@@ -11,8 +11,8 @@ PROG	: RDMA_ENDPOINT_CPP
 #include "rdma_buffer.h"
 #include "rdma_channel.h"
 
-RDMA_Endpoint::RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size, RDMA_Session* session)
-    : pd_(pd), ib_port_(ib_port), connected_(false), session_(session)
+RDMA_Endpoint::RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size, RDMA_MemoryPool* mempool)
+    : pd_(pd), ib_port_(ib_port), connected_(false), mempool_(mempool)
 {
     // create the Queue Pair
     struct ibv_qp_init_attr qp_init_attr;
@@ -134,10 +134,24 @@ void RDMA_Endpoint::close()
 
 // ----------------------------------------------
 
-void RDMA_Endpoint::send_data(void* addr, int size)
+RDMA_Buffer* RDMA_Endpoint::bufferalloc(int size)
+{
+    RDMA_Buffer* new_buffer = new RDMA_Buffer(channel_, pd_, size);
+    return new_buffer;
+}
+
+// ----------------------------------------------
+
+void RDMA_Endpoint::send_data(RDMA_Buffer* buffer)
+{
+    channel_->request_read(buffer);
+}
+
+void RDMA_Endpoint::send_rawdata(void* addr, int size)
 {
     RDMA_Buffer* new_buffer = new RDMA_Buffer(channel_, pd_, size, addr);
-    channel_->request_read(new_buffer);
+    //channel_->request_read(new_buffer);
+    send_data(new_buffer);
 }
 
 // ----------------------------------------------

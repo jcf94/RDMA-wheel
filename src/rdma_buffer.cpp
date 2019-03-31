@@ -19,6 +19,7 @@ RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr
     {
         buffer_ = addr;
         buffer_owned_ = false;
+        buffer_registerd_ = true;
         mr_ = ibv_reg_mr(pd, buffer_, size_,
             IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_READ);
         if (!mr_)
@@ -29,7 +30,7 @@ RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr
     {
         //log_info("ddddddddddddddddddddd");
         //buffer_ = malloc(size);
-        memblock_ = (RDMA_MemBlock*)channel_->endpoint()->session()->mempool()->blockalloc(size);
+        memblock_ = (RDMA_MemBlock*)channel_->endpoint()->mempool()->blockalloc(size);
         buffer_ = memblock_->dataaddr();
         mr_ = memblock_->mr();
         buffer_owned_ = true;
@@ -39,6 +40,14 @@ RDMA_Buffer::RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr
     log_info("RDMA_Buffer Created");
 }
 
+RDMA_Buffer::RDMA_Buffer(RDMA_Buffer* source, int offset, int size)
+    : buffer_owned_(false), channel_(source->channel_),
+    size_(size), mr_(source->mr_), memblock_(source->memblock_)
+{
+    buffer_ = (void*)(source->buffer_+offset)
+    log_info("RDMA_Buffer Copyed");
+}
+
 RDMA_Buffer::~RDMA_Buffer()
 {
     if (buffer_owned_)
@@ -46,7 +55,7 @@ RDMA_Buffer::~RDMA_Buffer()
         //free(buffer_);
         memblock_->free();
         //channel_->endpoint()->session()->mempool()->travel();
-    } else
+    } else if (buffer_registerd_)
     {
         if (ibv_dereg_mr(mr_))
         {

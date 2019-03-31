@@ -21,6 +21,7 @@ class RDMA_Buffer
 {
 public:
     RDMA_Buffer(RDMA_Channel* channel, ibv_pd* pd, int size, void* addr = NULL);
+    RDMA_Buffer(RDMA_Buffer* source, int offset, int size);
     ~RDMA_Buffer();
 
     // ----- Private To Public -----
@@ -31,6 +32,7 @@ public:
 
 private:
     bool buffer_owned_;
+    bool buffer_registerd_ = false;
     RDMA_Channel* channel_ = NULL;
 
     void* buffer_ = NULL;

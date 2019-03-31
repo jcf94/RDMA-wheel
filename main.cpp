@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
             log_ok("Ready to Transport\n");
 
             char a[] = "Hello World from Client !!!!!";
-            endpoint->send_data((void*)a, sizeof(a));
+            endpoint->send_rawdata((void*)a, sizeof(a));
 
             char b[] = "Test Test Test Test Test Test Test Test Test";
 
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
             {
                 int com;
                 std::cin >> com;
-                if (com == 0) endpoint->send_data((void*)b, sizeof(b));
+                if (com == 0) endpoint->send_rawdata((void*)b, sizeof(b));
                 else
                 {
                     endpoint->close();

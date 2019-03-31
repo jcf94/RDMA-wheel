@@ -23,26 +23,29 @@ struct RDMA_Endpoint_Info
 
 class RDMA_Channel;
 class RDMA_Buffer;
-class RDMA_Session;
+class RDMA_MemoryPool;
 
 class RDMA_Endpoint
 {
 public:
-    RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size, RDMA_Session* session);
+    RDMA_Endpoint(ibv_pd* pd, ibv_cq* cq, ibv_context* context, int ib_port, int cq_size, RDMA_MemoryPool* mempool);
     ~RDMA_Endpoint();
 
     struct cm_con_data_t get_local_con_data();
     void connect(struct cm_con_data_t remote_con_data);
     void close();
 
-    void send_data(void* addr, int size);
+    RDMA_Buffer* bufferalloc(int size);
+
+    void send_data(RDMA_Buffer* buffer);
+    void send_rawdata(void* addr, int size);
 
     void set_sync_barrier(int size);
     void wait_for_sync();
 
     // ----- Private To Public -----
     inline RDMA_Channel* channel() const {return channel_;}
-    inline RDMA_Session* session() const {return session_;}
+    inline RDMA_MemoryPool* mempool() const {return mempool_;}
 
     bool connected_;
 
@@ -62,8 +65,8 @@ private:
     RDMA_Endpoint_Info self_, remote_;
     // Message channel
     RDMA_Channel* channel_ = NULL;
-    // Session
-    RDMA_Session* session_ = NULL;
+    // MemoryPool
+    RDMA_MemoryPool* mempool_ = NULL;
 };
 
 #endif // !RDMA_ENDPOINT_H

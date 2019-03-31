@@ -8,7 +8,7 @@ CC = g++
 CFLAGS += -std=c++14 -Iutils/ThreadPool/src -Iutils/MemoryPool/src
 
 LD = g++
-LDFLAGS += -std=c++14
+LDFLAGS += -std=c++14 -Iutils/ThreadPool/src -Iutils/MemoryPool/src
 
 #NAME = $(wildcard *.cpp)
 NAME = benchmark.cpp

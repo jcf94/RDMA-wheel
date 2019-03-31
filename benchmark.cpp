@@ -17,12 +17,11 @@ PROG   : benchmark
 #include "src/rdma_endpoint.h"
 #include "src/tcp_sock_pre.h"
 #include "src/rdma_message.h"
+#include "src/rdma_buffer.h"
+
+#include "src/rdma_channel.h"
 
 using namespace std;
-
-#define KB (1024)
-#define MB (1024 * KB)
-#define GB (1024 * MB)
 
 int main(int argc, char* argv[])
 {
@@ -51,23 +50,29 @@ int main(int argc, char* argv[])
         RDMA_Endpoint* endpoint = session.ptp_connect(&pre_tcp);
 
         // Prepare data
-        int total_data = 512 * MB;
-        int block_data = 1024 * KB;
+        int total_data = 256 * MB;
+        int block_data = 4 * KB;
 
         if (strcmp(argv[1], "s") == 0)
         {
 
         } else if (strcmp(argv[1], "c") == 0)
         {
-            char* test_data = (char*)malloc(total_data);
+            //char* test_data = (char*)malloc(total_data);
+            RDMA_Buffer* test_data = endpoint->bufferalloc(total_data);
+            printf("%p\n", test_data->buffer());
 
             // Warm Up
-            endpoint->set_sync_barrier(total_data);
-            for (int i=0;i<total_data;i+=block_data)
-            {
-                endpoint->send_data((void*)(test_data+i), block_data);
-            }
-            endpoint->wait_for_sync();
+            // endpoint->set_sync_barrier(total_data);
+            // for (int i=0;i<total_data;i+=block_data)
+            // {
+            //     RDMA_Buffer* temp = new RDMA_Buffer(test_data, i, block_data);
+            //     //printf("%p\n", temp->buffer());
+            //     endpoint->send_data(temp);
+            //     //endpoint->send_rawdata((void*)(test_data+i), block_data);
+            // }
+            // endpoint->wait_for_sync();
+            // log_ok(make_string("%d", endpoint->channel()->get_table_size()));
 
             log_ok("Test Start");
 
@@ -76,7 +81,9 @@ int main(int argc, char* argv[])
             endpoint->set_sync_barrier(total_data);
             for (int i=0;i<total_data;i+=block_data)
             {
-                endpoint->send_data((void*)(test_data+i), block_data);
+                RDMA_Buffer* temp = new RDMA_Buffer(test_data, i, block_data);
+                endpoint->send_data(temp);
+                //endpoint->send_rawdata((void*)(test_data+i), block_data);
             }
             endpoint->wait_for_sync();
 

@@ -81,6 +81,7 @@ void RDMA_Channel::request_read(RDMA_Buffer* buffer)
 {
     task_with_lock([this, buffer]
     {
+        //log_ok(make_string("%p", buffer->buffer()));
         insert_to_table((uint64_t)buffer->buffer(), (uint64_t)buffer);
 
         RDMA_Message::fill_message_content((char*)outgoing_->buffer(), buffer->buffer(), buffer->size(), buffer->mr());
